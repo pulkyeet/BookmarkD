@@ -1,0 +1,15 @@
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: bookrate
+      POSTGRES_PASSWORD: localdev2178
+      POSTGRES_DB: bookrate
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

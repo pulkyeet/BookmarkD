@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - BookmarkD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-900 text-gray-100">
+<nav class="glass-nav fixed w-full z-50 top-0">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <a href="feed.html" class="text-2xl font-bold gradient-text">BookmarkD</a>
+        <div class="flex items-center space-x-4">
+            <a href="books.html" class="hover:text-blue-400 transition">Browse</a>
+            <a href="feed.html" class="hover:text-blue-400 transition">Feed</a>
+            <a href="profile.html" class="text-blue-400">Profile</a>
+            <button id="logoutBtn" class="btn-secondary">Logout</button>
+        </div>
+    </div>
+</nav>
+
+<main class="pt-24 pb-12">
+    <div class="container mx-auto px-6">
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold mb-2" id="username"></h1>
+            <p class="text-gray-400" id="email"></p>
+        </div>
+
+        <div class="auth-card mb-8">
+            <h2 class="text-2xl font-bold mb-4">Your Stats</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="text-center">
+                    <div id="totalRatings" class="text-3xl font-bold gradient-text">0</div>
+                    <div class="text-sm text-gray-400">Books Rated</div>
+                </div>
+                <div class="text-center">
+                    <div id="avgRating" class="text-3xl font-bold gradient-text">0.0</div>
+                    <div class="text-sm text-gray-400">Avg Rating</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Tabs -->
+        <div class="mb-6">
+            <div class="flex gap-2 border-b border-gray-700">
+                <button class="tab-btn active" data-status="all">All Books</button>
+                <button class="tab-btn" data-status="to_read">To Read</button>
+                <button class="tab-btn" data-status="currently_reading">Reading</button>
+                <button class="tab-btn" data-status="finished_reading">Finished</button>
+            </div>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6" id="sectionTitle">Your Books</h2>
+
+        <div id="loading" class="text-center py-12">
+            <div class="spinner"></div>
+        </div>
+
+        <div id="ratingsList" class="space-y-4 hidden"></div>
+
+        <div id="noRatings" class="text-center py-12 text-gray-500 hidden">
+            <p class="mb-4">You haven't rated any books yet.</p>
+            <a href="books.html" class="btn-primary">Browse Books</a>
+        </div>
+    </div>
+</main>
+
+<script type="module" src="js/profile.js"></script>
+
+<style>
+    .tab-btn {
+        padding: 12px 24px;
+        border-bottom: 2px solid transparent;
+        color: #9ca3af;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: none;
+        border-top: none;
+        border-left: none;
+        border-right: none;
+    }
+    .tab-btn:hover {
+        color: #3b82f6;
+    }
+    .tab-btn.active {
+        border-bottom-color: #3b82f6;
+        color: #3b82f6;
+    }
+</style>
+</body>
+</html>

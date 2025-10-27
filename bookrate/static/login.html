@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - BookmarkD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-900 text-gray-100">
+<nav class="glass-nav fixed w-full z-50 top-0">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <a href="index.html" class="text-2xl font-bold gradient-text">BookmarkD</a>
+        <div class="space-x-4">
+            <a href="books.html" class="hover:text-blue-400 transition">Browse Books</a>
+            <a href="signup.html" class="btn-primary">Sign Up</a>
+        </div>
+    </div>
+</nav>
+
+<main class="pt-32 min-h-screen flex items-center justify-center px-6">
+    <div class="auth-card max-w-md w-full">
+        <h1 class="text-3xl font-bold mb-2 text-center gradient-text">Welcome Back</h1>
+        <p class="text-gray-400 text-center mb-8">Login to continue rating books</p>
+
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium mb-2">Email</label>
+                <input type="email" id="email" required
+                       class="input-field" placeholder="you@example.com">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-2">Password</label>
+                <input type="password" id="password" required
+                       class="input-field" placeholder="••••••••">
+            </div>
+
+            <div id="errorMessage" class="hidden p-3 bg-red-500/10 border border-red-500 rounded-lg text-red-400 text-sm"></div>
+
+            <button type="submit" class="btn-primary w-full">
+                Login
+            </button>
+        </form>
+
+        <p class="text-center mt-6 text-gray-400">
+            Don't have an account?
+            <a href="signup.html" class="text-blue-400 hover:text-blue-300">Sign up</a>
+        </p>
+    </div>
+</main>
+
+<script type="module" src="js/auth.js"></script>
+</body>
+</html>

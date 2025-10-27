@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookmarkD - Discover & Rate Books</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-900 text-gray-100">
+<nav class="glass-nav fixed w-full z-50 top-0">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <a href="index.html" class="flex items-center gap-3">
+            <div class="logo-placeholder">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                    <rect width="40" height="40" rx="8" fill="url(#gradient)"/>
+                    <path d="M12 10H20C24 10 26 12 26 16C26 20 24 22 20 22H12V10Z" fill="white" opacity="0.9"/>
+                    <path d="M12 22H21C25 22 27 24 27 28C27 32 25 34 21 34H12V22Z" fill="white" opacity="0.7"/>
+                    <defs>
+                        <linearGradient id="gradient" x1="0" y1="0" x2="40" y2="40">
+                            <stop stop-color="#3b82f6"/>
+                            <stop offset="1" stop-color="#8b5cf6"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="text-2xl font-bold gradient-text">BookmarkD</span>
+        </a>
+        <div class="space-x-4">
+            <a href="books.html" class="hover:text-blue-400 transition">Browse Books</a>
+            <a href="login.html" class="hover:text-blue-400 transition">Login</a>
+            <a href="signup.html" class="btn-primary">Sign Up</a>
+        </div>
+    </div>
+</nav>
+
+<main class="pt-24 pb-12">
+    <div class="container mx-auto px-6 max-w-4xl">
+        <!-- CTA Banner -->
+        <div class="auth-card mb-8 text-center bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/50">
+            <h1 class="text-4xl font-bold mb-4 gradient-text">Welcome to BookmarkD</h1>
+            <p class="text-gray-300 mb-6">Join thousands of readers tracking and sharing their book journey</p>
+            <div class="space-x-4">
+                <a href="signup.html" class="btn-primary btn-large">Sign Up Free</a>
+                <a href="books.html" class="btn-secondary btn-large">Browse Books</a>
+            </div>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6">Latest Activity</h2>
+
+        <div id="loading" class="text-center py-12">
+            <div class="spinner"></div>
+        </div>
+
+        <div id="feedList" class="space-y-6 hidden"></div>
+
+        <div id="noActivity" class="text-center py-12 text-gray-500 hidden">
+            <p class="mb-4">No activity yet.</p>
+            <a href="signup.html" class="btn-primary">Be the first to rate!</a>
+        </div>
+
+        <!-- Bottom CTA -->
+        <div class="text-center mt-12 p-8 bg-gray-800/50 rounded-lg">
+            <h3 class="text-2xl font-bold mb-2">Want to join the conversation?</h3>
+            <p class="text-gray-400 mb-4">Sign up to rate books, follow readers, and share your thoughts</p>
+            <a href="signup.html" class="btn-primary">Create Account</a>
+        </div>
+    </div>
+</main>
+
+<footer class="py-8 text-center text-gray-500 border-t border-gray-800">
+    <p>&copy; 2025 BookmarkD. Built with Go & Modern Web.</p>
+</footer>
+
+<script type="module">
+    // Redirect logged-in users to feed
+    if (localStorage.getItem('token')) {
+        window.location.href = 'feed.html';
+    }
+
+    // Load public feed for logged-out users
+    import { api } from './js/api.js';
+
+    async function loadPublicFeed() {
+        const loading = document.getElementById('loading');
+        const feedList = document.getElementById('feedList');
+        const noActivity = document.getElementById('noActivity');
+
+        try {
+            const feed = await api.getFeed('all', 10, 0); // Show 10 items
+
+            loading.classList.add('hidden');
+
+            if (feed && feed.length > 0) {
+                feedList.classList.remove('hidden');
+                feedList.innerHTML = feed.map(item => `
+                <div class="auth-card hover:border-blue-500 transition cursor-pointer"
+                     onclick="window.location.href='book-detail.html?id=${item.book_id}'">
+                    <div class="flex gap-4">
+                        <img src="${item.book_cover || 'https://via.placeholder.com/100x150'}"
+                             alt="${item.book_title}"
+                             class="w-20 h-30 object-cover rounded">
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <p class="text-sm text-gray-400">
+                                        <span class="font-bold text-blue-400">${item.username}</span>
+                                        ${getStatusText(item.status)}
+                                    </p>
+                                    <h3 class="font-bold text-lg mt-1">${item.book_title}</h3>
+                                    <p class="text-gray-400 text-sm">${item.book_author}</p>
+                                </div>
+                                ${item.rating > 0 ? `<div class="rating-badge">${item.rating}/10</div>` : ''}
+                            </div>
+                            ${item.review ? `<p class="text-gray-400 text-sm mt-2">${item.review}</p>` : ''}
+                            <p class="text-xs text-gray-500 mt-2">${formatDate(item.created_at)}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            } else {
+                noActivity.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error loading feed:', error);
+            loading.classList.add('hidden');
+            noActivity.classList.remove('hidden');
+        }
+    }
+
+    function getStatusText(status) {
+        switch(status) {
+            case 'to_read': return 'wants to read';
+            case 'currently_reading': return 'is reading';
+            case 'finished_reading': return 'finished reading';
+            default: return 'rated';
+        }
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'just now';
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        if (diffDays < 7) return `${diffDays}d ago`;
+        return date.toLocaleDateString();
+    }
+
+    loadPublicFeed();
+</script>
+</body>
+</html>

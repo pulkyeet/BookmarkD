@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - BookmarkD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-900 text-gray-100">
+<nav class="glass-nav fixed w-full z-50 top-0">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <a href="feed.html" class="flex items-center gap-3">
+            <div class="logo-placeholder">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                    <rect width="40" height="40" rx="8" fill="url(#gradient)"/>
+                    <path d="M12 10H20C24 10 26 12 26 16C26 20 24 22 20 22H12V10Z" fill="white" opacity="0.9"/>
+                    <path d="M12 22H21C25 22 27 24 27 28C27 32 25 34 21 34H12V22Z" fill="white" opacity="0.7"/>
+                    <defs>
+                        <linearGradient id="gradient" x1="0" y1="0" x2="40" y2="40">
+                            <stop stop-color="#3b82f6"/>
+                            <stop offset="1" stop-color="#8b5cf6"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="text-2xl font-bold gradient-text">BookmarkD</span>
+        </a>
+        <div class="flex items-center space-x-4">
+            <a href="books.html" class="hover:text-blue-400 transition">Browse</a>
+            <a href="profile.html" id="profileLink" class="hidden hover:text-blue-400 transition">My Profile</a>
+            <a href="login.html" id="loginLink" class="hover:text-blue-400 transition">Login</a>
+            <button id="logoutBtn" class="hidden btn-secondary">Logout</button>
+        </div>
+    </div>
+</nav>
+
+<main class="pt-24 pb-12">
+    <div class="container mx-auto px-6">
+        <div id="loading" class="text-center py-12">
+            <div class="spinner"></div>
+        </div>
+
+        <div id="profileContent" class="hidden">
+            <div class="mb-8">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h1 class="text-4xl font-bold mb-2" id="username"></h1>
+                        <p class="text-gray-400" id="email"></p>
+                    </div>
+                    <button id="followBtn" class="hidden btn-primary"></button>
+                </div>
+            </div>
+
+            <div class="auth-card mb-8">
+                <h2 class="text-2xl font-bold mb-4">Stats</h2>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div class="text-center">
+                        <div id="totalBooks" class="text-3xl font-bold gradient-text">0</div>
+                        <div class="text-sm text-gray-400">Books</div>
+                    </div>
+                    <div class="text-center">
+                        <div id="avgRating" class="text-3xl font-bold gradient-text">0.0</div>
+                        <div class="text-sm text-gray-400">Avg Rating</div>
+                    </div>
+                    <div class="text-center">
+                        <div id="toReadCount" class="text-3xl font-bold gradient-text">0</div>
+                        <div class="text-sm text-gray-400">To Read</div>
+                    </div>
+                    <div class="text-center">
+                        <div id="currentlyReading" class="text-3xl font-bold gradient-text">0</div>
+                        <div class="text-sm text-gray-400">Reading</div>
+                    </div>
+                    <div class="text-center">
+                        <div id="finishedCount" class="text-3xl font-bold gradient-text">0</div>
+                        <div class="text-sm text-gray-400">Finished</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mt-6">
+                    <div class="text-center cursor-pointer hover:text-blue-400" id="followersBtn">
+                        <div id="followersCount" class="text-2xl font-bold">0</div>
+                        <div class="text-sm text-gray-400">Followers</div>
+                    </div>
+                    <div class="text-center cursor-pointer hover:text-blue-400" id="followingBtn">
+                        <div id="followingCount" class="text-2xl font-bold">0</div>
+                        <div class="text-sm text-gray-400">Following</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div id="followModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50" onclick="closeModal()">
+    <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4" onclick="event.stopPropagation()">
+        <div class="flex justify-between items-center mb-4">
+            <h3 id="modalTitle" class="text-2xl font-bold"></h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+        </div>
+        <div id="modalContent" class="space-y-3 max-h-96 overflow-y-auto"></div>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<style>
+    .toast {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        opacity: 0;
+        transform: translateY(30px) scale(0.9);
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        z-index: 1000;
+        pointer-events: none;
+        font-weight: 600;
+    }
+    .toast.show {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+</style>
+
+<script type="module" src="js/user-profile.js"></script>
+</body>
+</html>

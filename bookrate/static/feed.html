@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feed - BookmarkD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-900 text-gray-100">
+<nav class="glass-nav fixed w-full z-50 top-0">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <a href="feed.html" class="flex items-center gap-3">
+            <div class="logo-placeholder">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                    <rect width="40" height="40" rx="8" fill="url(#gradient)"/>
+                    <path d="M12 10H20C24 10 26 12 26 16C26 20 24 22 20 22H12V10Z" fill="white" opacity="0.9"/>
+                    <path d="M12 22H21C25 22 27 24 27 28C27 32 25 34 21 34H12V22Z" fill="white" opacity="0.7"/>
+                    <defs>
+                        <linearGradient id="gradient" x1="0" y1="0" x2="40" y2="40">
+                            <stop stop-color="#3b82f6"/>
+                            <stop offset="1" stop-color="#8b5cf6"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="text-2xl font-bold gradient-text">BookmarkD</span>
+        </a>
+        <div class="flex items-center space-x-4">
+            <a href="books.html" class="hover:text-blue-400 transition">Browse</a>
+            <a href="profile.html" id="profileLink" class="hidden hover:text-blue-400 transition">Profile</a>
+            <a href="login.html" id="loginLink" class="hover:text-blue-400 transition">Login</a>
+            <button id="logoutBtn" class="hidden btn-secondary">Logout</button>
+        </div>
+    </div>
+</nav>
+
+<main class="pt-24 pb-12">
+    <div class="container mx-auto px-6 max-w-4xl">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-4xl font-bold">Activity Feed</h1>
+
+            <div id="feedToggle" class="hidden flex gap-2">
+                <button id="allFeedBtn" class="btn-secondary">Everyone</button>
+                <button id="followingFeedBtn" class="btn-primary">Following</button>
+            </div>
+        </div>
+
+        <div id="loading" class="text-center py-12">
+            <div class="spinner"></div>
+        </div>
+
+        <div id="feedList" class="space-y-6 hidden"></div>
+
+        <!-- ADD THESE 3 LINES -->
+        <div id="loadMoreContainer" class="text-center mt-8 hidden">
+            <button id="loadMoreBtn" class="btn-secondary">Load More</button>
+        </div>
+
+        <div id="noActivity" class="text-center py-12 text-gray-500 hidden">
+            <p class="mb-4">No activity yet.</p>
+            <a href="books.html" class="btn-primary">Browse Books</a>
+        </div>
+    </div>
+</main>
+
+<script type="module" src="js/feed.js"></script>
+</body>
+</html>

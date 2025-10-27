@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Details - BookmarkD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-900 text-gray-100">
+<nav class="glass-nav fixed w-full z-50 top-0">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <a href="index.html" class="flex items-center gap-3">
+            <div class="logo-placeholder">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                    <rect width="40" height="40" rx="8" fill="url(#gradient)"/>
+                    <path d="M12 10H20C24 10 26 12 26 16C26 20 24 22 20 22H12V10Z" fill="white" opacity="0.9"/>
+                    <path d="M12 22H21C25 22 27 24 27 28C27 32 25 34 21 34H12V22Z" fill="white" opacity="0.7"/>
+                    <defs>
+                        <linearGradient id="gradient" x1="0" y1="0" x2="40" y2="40">
+                            <stop stop-color="#3b82f6"/>
+                            <stop offset="1" stop-color="#8b5cf6"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="text-2xl font-bold gradient-text">BookmarkD</span>
+        </a>
+        <div class="flex items-center space-x-4">
+            <a href="books.html" class="hover:text-blue-400 transition">Browse</a>
+            <a href="profile.html" id="profileLink" class="hidden hover:text-blue-400 transition">Profile</a>
+            <a href="login.html" id="loginLink" class="hover:text-blue-400 transition">Login</a>
+            <button id="logoutBtn" class="hidden btn-secondary">Logout</button>
+        </div>
+    </div>
+</nav>
+
+<main class="pt-24 pb-12">
+    <div class="container mx-auto px-6">
+        <a href="books.html" class="text-blue-400 hover:text-blue-300 mb-6 inline-block">
+            ← Back to Books
+        </a>
+
+        <div id="loading" class="text-center py-12">
+            <div class="spinner"></div>
+        </div>
+
+        <div id="bookDetail" class="hidden">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <img id="bookCover" class="w-full rounded-lg shadow-2xl book-cover" alt="Book cover">
+                </div>
+
+                <div class="md:col-span-2">
+                    <h1 id="bookTitle" class="text-4xl font-bold mb-2"></h1>
+                    <p id="bookAuthor" class="text-xl text-gray-400 mb-4"></p>
+
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="rating-display" id="avgRating">0.0</div>
+                        <div>
+                            <div class="text-sm text-gray-400">Average Rating</div>
+                            <div id="totalRatings" class="text-gray-500 text-sm"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <p id="bookYear" class="text-sm text-gray-500 mb-2"></p>
+                        <p id="bookISBN" class="text-sm text-gray-500"></p>
+                    </div>
+
+                    <div class="mb-8">
+                        <h3 class="text-xl font-bold mb-2">Description</h3>
+                        <p id="bookDescription" class="text-gray-400 leading-relaxed"></p>
+                    </div>
+
+                    <div id="ratingSection" class="auth-card hidden">
+                        <h3 class="text-xl font-bold mb-4">Your Status</h3>
+
+                        <!-- Reading Status Buttons -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium mb-3">Reading Status</label>
+                            <div class="flex gap-2 flex-wrap">
+                                <button type="button" class="status-btn" data-status="to_read">Want to Read</button>
+                                <button type="button" class="status-btn" data-status="currently_reading">Reading</button>
+                                <button type="button" class="status-btn" data-status="finished_reading">Finished</button>
+                            </div>
+                        </div>
+
+                        <h3 class="text-xl font-bold mb-4">Rate this book</h3>
+                        <form id="ratingForm">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium mb-3">Your Rating (1-10)</label>
+                                <div class="rating-input-wrapper">
+                                    <button type="button" class="rating-btn" data-rating="1">1</button>
+                                    <button type="button" class="rating-btn" data-rating="2">2</button>
+                                    <button type="button" class="rating-btn" data-rating="3">3</button>
+                                    <button type="button" class="rating-btn" data-rating="4">4</button>
+                                    <button type="button" class="rating-btn" data-rating="5">5</button>
+                                    <button type="button" class="rating-btn" data-rating="6">6</button>
+                                    <button type="button" class="rating-btn" data-rating="7">7</button>
+                                    <button type="button" class="rating-btn" data-rating="8">8</button>
+                                    <button type="button" class="rating-btn" data-rating="9">9</button>
+                                    <button type="button" class="rating-btn" data-rating="10">10</button>
+                                </div>
+                                <input type="hidden" id="ratingValue" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium mb-2">Review (optional)</label>
+                                <textarea id="reviewText" rows="4" class="input-field"
+                                          placeholder="Share your thoughts..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn-primary">Submit Rating</button>
+                        </form>
+                    </div>
+
+                    <div id="loginPrompt" class="hidden p-4 bg-blue-500/10 border border-blue-500 rounded-lg">
+                        <p class="text-blue-400">
+                            <a href="login.html" class="underline">Login</a> to rate this book
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-12">
+                <h2 class="text-2xl font-bold mb-6">Reviews</h2>
+                <div id="reviewsList" class="space-y-4"></div>
+                <div id="noReviews" class="text-center py-8 text-gray-500 hidden">
+                    No reviews yet. Be the first to rate!
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script type="module" src="js/book-detail.js"></script>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast"></div>
+
+<style>
+    .toast {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        opacity: 0;
+        transform: translateY(30px) scale(0.9);
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        z-index: 1000;
+        pointer-events: none;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
+    }
+
+    .toast.show {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    .toast.error {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+</style>
+<style>
+    .status-btn {
+        padding: 8px 16px;
+        border: 2px solid #4b5563;
+        border-radius: 8px;
+        background: transparent;
+        color: #9ca3af;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .status-btn:hover {
+        border-color: #3b82f6;
+        color: #3b82f6;
+    }
+    .status-btn.selected {
+        border-color: #3b82f6;
+        background: #3b82f6;
+        color: white;
+    }
+</style>
+
+</body>
+</html>
