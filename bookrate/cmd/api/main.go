@@ -104,6 +104,17 @@ func main() {
 		}
 	})
 
+	mux.HandleFunc("/api/ratings/{id}/like", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			middleware.AuthMiddleware(ratingHandler.LikeRating)(w, r)
+		case http.MethodDelete:
+			middleware.AuthMiddleware(ratingHandler.UnlikeRating)(w, r)
+		default:
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
 	mux.HandleFunc("/api/users/{id}/profile", userHandler.GetProfile)
 
 	mux.HandleFunc("/api/users/{id}/follow", func(w http.ResponseWriter, r *http.Request) {

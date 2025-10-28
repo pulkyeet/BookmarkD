@@ -48,7 +48,7 @@ RETURNING id, user_id, book_id, rating, review, status, created_at, updated_at`
 }
 
 // Get all ratings for a book with stats
-func (r *RatingRepository) GetByBookID(bookID int) (*models.BookRatingStats, error) {
+func (r *RatingRepository) GetByBookID(bookID int, userID *int) (*models.BookRatingStats, error) {
 	statsQuery := `
 SELECT 
 	COALESCE(AVG(rating), 0) AS average_rating,
@@ -65,36 +65,60 @@ WHERE book_id = $1`
 	ratingsQuery := `
 SELECT
 	r.id, r.user_id, r.book_id, r.rating, r.review, r.created_at, r.updated_at,
-	u.username
+	u.username,
+	COUNT(rl.user_id) as like_count`
+
+	if userID != nil {
+		ratingsQuery += `,
+	EXISTS(SELECT 1 FROM review_likes WHERE user_id = $2 AND rating_id = r.id) as liked_by_user`
+	}
+
+	ratingsQuery += `
 FROM ratings r
 JOIN users u ON r.user_id = u.id
+LEFT JOIN review_likes rl ON r.id = rl.rating_id
 WHERE r.book_id = $1
+GROUP BY r.id, u.username
 ORDER BY r.created_at DESC`
 
-	rows, err := r.db.Query(ratingsQuery, bookID)
+	var rows *sql.Rows
+	if userID != nil {
+		rows, err = r.db.Query(ratingsQuery, bookID, *userID)
+	} else {
+		rows, err = r.db.Query(ratingsQuery, bookID)
+	}
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	ratings := []models.RatingWithUser{}
+	ratings := []models.RatingWithLikes{}
 	for rows.Next() {
-		var rating models.RatingWithUser
+		var rating models.RatingWithLikes
 		var reviewNull sql.NullString
 		var ratingValue int64
-		err := rows.Scan(
-			&rating.ID,
-			&rating.UserID,
-			&rating.BookID,
-			&ratingValue,
-			&reviewNull,
-			&rating.CreatedAt,
-			&rating.UpdatedAt,
-			&rating.Username,
-		)
-		if err != nil {
-			return nil, err
+
+		if userID != nil {
+			err := rows.Scan(
+				&rating.ID, &rating.UserID, &rating.BookID, &ratingValue, &reviewNull,
+				&rating.CreatedAt, &rating.UpdatedAt, &rating.Username,
+				&rating.LikeCount, &rating.LikedByUser,
+			)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			err := rows.Scan(
+				&rating.ID, &rating.UserID, &rating.BookID, &ratingValue, &reviewNull,
+				&rating.CreatedAt, &rating.UpdatedAt, &rating.Username,
+				&rating.LikeCount,
+			)
+			if err != nil {
+				return nil, err
+			}
+			rating.LikedByUser = false
 		}
+
 		rating.Rating.Rating = int(ratingValue)
 		rating.Review = reviewNull.String
 		ratings = append(ratings, rating)
@@ -184,25 +208,35 @@ WHERE user_id = $1 AND book_id = $2`
 	return nil
 }
 
-func (r *RatingRepository) GetFeed(userID *int, limit, offset int) ([]models.FeedItem, error) {
+func (r *RatingRepository) GetFeed(requestingUserID *int, limit, offset int) ([]models.FeedItem, error) {
 	query := `
     SELECT 
         r.id, r.user_id, r.book_id, r.rating, r.review, r.status, r.created_at, r.updated_at,
         u.username,
-        b.title, b.author, b.cover_url
+        b.title, b.author, b.cover_url,
+        COUNT(rl.user_id) as like_count`
+
+	if requestingUserID != nil {
+		query += `,
+        EXISTS(SELECT 1 FROM review_likes WHERE user_id = $1 AND rating_id = r.id) as liked_by_user`
+	}
+
+	query += `
     FROM ratings r
     JOIN users u ON r.user_id = u.id
-    JOIN books b ON r.book_id = b.id`
+    JOIN books b ON r.book_id = b.id
+    LEFT JOIN review_likes rl ON r.id = rl.rating_id`
 
 	args := []interface{}{}
 	argCount := 1
 
-	if userID != nil {
-		query += ` WHERE r.user_id IN (SELECT following_id FROM follows WHERE follower_id = $` + fmt.Sprintf("%d", argCount) + `)`
-		args = append(args, *userID)
+	if requestingUserID != nil {
+		args = append(args, *requestingUserID)
 		argCount++
+		query += ` WHERE r.user_id IN (SELECT following_id FROM follows WHERE follower_id = $1)`
 	}
 
+	query += ` GROUP BY r.id, u.username, b.title, b.author, b.cover_url`
 	query += ` ORDER BY r.created_at DESC LIMIT $` + fmt.Sprintf("%d", argCount) + ` OFFSET $` + fmt.Sprintf("%d", argCount+1)
 	args = append(args, limit, offset)
 
@@ -219,15 +253,29 @@ func (r *RatingRepository) GetFeed(userID *int, limit, offset int) ([]models.Fee
 		var coverNull sql.NullString
 		var ratingValue int
 
-		err := rows.Scan(
-			&item.ID, &item.UserID, &item.BookID, &ratingValue, &reviewNull, &item.Status,
-			&item.CreatedAt, &item.UpdatedAt,
-			&item.Username,
-			&item.BookTitle, &item.BookAuthor, &coverNull,
-		)
-		if err != nil {
-			return nil, err
+		if requestingUserID != nil {
+			err := rows.Scan(
+				&item.ID, &item.UserID, &item.BookID, &ratingValue, &reviewNull, &item.Status,
+				&item.CreatedAt, &item.UpdatedAt, &item.Username,
+				&item.BookTitle, &item.BookAuthor, &coverNull,
+				&item.LikeCount, &item.LikedByUser,
+			)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			err := rows.Scan(
+				&item.ID, &item.UserID, &item.BookID, &ratingValue, &reviewNull, &item.Status,
+				&item.CreatedAt, &item.UpdatedAt, &item.Username,
+				&item.BookTitle, &item.BookAuthor, &coverNull,
+				&item.LikeCount,
+			)
+			if err != nil {
+				return nil, err
+			}
+			item.LikedByUser = false
 		}
+
 		item.Rating.Rating = ratingValue
 		item.Review = reviewNull.String
 		item.BookCover = coverNull.String
@@ -267,4 +315,44 @@ WHERE user_id = $1`
 		ratings = append(ratings, rating)
 	}
 	return ratings, nil
+}
+
+func (r *RatingRepository) LikeRating(userID, ratingID int) error {
+	query := `INSERT INTO review_likes VALUES ($1, $2) ON CONFLICT DO NOTHING`
+
+	_, err := r.db.Exec(query, userID, ratingID)
+	return err
+}
+
+func (r *RatingRepository) UnlikeRating(userID, ratingID int) error {
+	query := `DELETE FROM review_likes WHERE user_id = $1 AND rating_id = $2`
+	result, err := r.db.Exec(query, userID, ratingID)
+	if err != nil {
+		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+func (r *RatingRepository) GetLikeCount(ratingID int) (int, error) {
+	query := `SELECT COUNT(*) FROM review_likes where rating_id = $1`
+
+	var count int
+	err := r.db.QueryRow(query, ratingID).Scan(&count)
+
+	return count, err
+}
+
+func (r *RatingRepository) HasUserLiked(userID, ratingID int) (bool, error) {
+	query := `SELECT EXISTS(SELECT 1 FROM review_likes WHERE user_id = $1 AND rating_id = $2)`
+
+	var exists bool
+	err := r.db.QueryRow(query, userID, ratingID).Scan(&exists)
+	return exists, err
 }

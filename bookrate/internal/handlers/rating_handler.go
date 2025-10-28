@@ -99,7 +99,11 @@ func (h *RatingHandler) GetBookRatings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stats, err := h.ratingRepo.GetByBookID(bookID)
+	var userID *int
+	if claims, ok := middleware.GetUserFromContext(r); ok {
+		userID = &claims.UserID
+	}
+	stats, err := h.ratingRepo.GetByBookID(bookID, userID)
 	if err != nil {
 		log.Printf("Error getting ratings for book %d: %v", bookID, err)
 		http.Error(w, "Failed to get ratings", http.StatusInternalServerError)
@@ -180,4 +184,48 @@ func (h *RatingHandler) GetMyRatingForBook(w http.ResponseWriter, r *http.Reques
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(rating)
+}
+
+func (h *RatingHandler) LikeRating(w http.ResponseWriter, r *http.Request) {
+	claims, ok := middleware.GetUserFromContext(r)
+	if !ok {
+		http.Error(w, "Unauthorised", http.StatusUnauthorized)
+		return
+	}
+	ratingID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid ratinf ID", http.StatusBadRequest)
+		return
+	}
+	err = h.ratingRepo.LikeRating(claims.UserID, ratingID)
+	if err != nil {
+		log.Printf("Error liking rating: %v", err)
+		http.Error(w, "Failed to like rating", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *RatingHandler) UnlikeRating(w http.ResponseWriter, r *http.Request) {
+	claims, ok := middleware.GetUserFromContext(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	ratingID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid rating ID", http.StatusBadRequest)
+		return
+	}
+	err = h.ratingRepo.UnlikeRating(claims.UserID, ratingID)
+	if err == sql.ErrNoRows {
+		http.Error(w, "Like not found", http.StatusInternalServerError)
+		return
+	}
+	if err != nil {
+		log.Printf("Error unliking rating: %v", err)
+		http.Error(w, "Failed to unlike", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
