@@ -124,7 +124,14 @@
             </div>
 
             <div class="mt-12">
-                <h2 class="text-2xl font-bold mb-6">Reviews</h2>
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Reviews</h2>
+                    <select id="sortSelect" class="bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
+                        <option value="newest">Newest First</option>
+                        <option value="most_liked">Most Liked</option>
+                        <option value="highest_rating">Highest Rating</option>
+                    </select>
+                </div>
                 <div id="reviewsList" class="space-y-4"></div>
                 <div id="noReviews" class="text-center py-8 text-gray-500 hidden">
                     No reviews yet. Be the first to rate!

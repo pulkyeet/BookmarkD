@@ -39,6 +39,37 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// OptionalAuthMiddleware extracts user from token if present, but doesn't fail if missing
+func OptionalAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			// No token, continue without user context
+			next(w, r)
+			return
+		}
+
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			// Invalid format, continue without user context
+			next(w, r)
+			return
+		}
+
+		token := parts[1]
+		claims, err := models.ValidateToken(token)
+		if err != nil {
+			// Invalid token, continue without user context (don't fail)
+			next(w, r)
+			return
+		}
+
+		// Valid token, set context
+		ctx := context.WithValue(r.Context(), UserContextKey, claims)
+		next(w, r.WithContext(ctx))
+	}
+}
+
 func GetUserFromContext(r *http.Request) (*models.Claims, bool) {
 	claims, ok := r.Context().Value(UserContextKey).(*models.Claims)
 	return claims, ok

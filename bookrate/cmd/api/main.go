@@ -30,12 +30,14 @@ func main() {
 	bookRepo := database.NewBookRepository(db)
 	ratingRepo := database.NewRatingRepository(db)
 	followRepo := database.NewFollowRepository(db)
+	commentRepo := database.NewCommentRepository(db)
 
 	ratingHandler := handlers.NewRatingHandler(ratingRepo)
 	bookHandler := handlers.NewBookHandler(bookRepo)
 	authHandler := handlers.NewAuthHandler(userRepo)
 	feedHandler := handlers.NewFeedHandler(ratingRepo)
 	userHandler := handlers.NewUserHandler(userRepo, followRepo)
+	commentHandler := handlers.NewCommentHandler(commentRepo)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", healthHandler)
@@ -69,15 +71,30 @@ func main() {
 		}
 	})
 
+	mux.HandleFunc("/api/books/{id}/ratings/me", func(w http.ResponseWriter, r *http.Request) {
+		bookID := r.PathValue("id")
+		query := r.URL.Query()
+		query.Set("book_id", bookID)
+		r.URL.RawQuery = query.Encode()
+
+		if r.Method == http.MethodGet {
+			middleware.AuthMiddleware(ratingHandler.GetMyRatingForBook)(w, r)
+		} else {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
 	mux.HandleFunc("/api/books/{id}/ratings", func(w http.ResponseWriter, r *http.Request) {
 		bookID := r.PathValue("id")
-		r.URL.RawQuery = "book_id=" + bookID // Added missing =
+		query := r.URL.Query()
+		query.Set("book_id", bookID)
+		r.URL.RawQuery = query.Encode()
 
 		switch r.Method {
 		case http.MethodPost:
 			middleware.AuthMiddleware(ratingHandler.CreateRating)(w, r)
 		case http.MethodGet:
-			ratingHandler.GetBookRatings(w, r)
+			middleware.OptionalAuthMiddleware(ratingHandler.GetBookRatings)(w, r)
 		case http.MethodDelete:
 			middleware.AuthMiddleware(ratingHandler.DeleteRating)(w, r)
 		default:
@@ -88,17 +105,6 @@ func main() {
 	mux.HandleFunc("/api/users/me/ratings", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			middleware.AuthMiddleware(ratingHandler.GetMyRatings)(w, r)
-		} else {
-			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	mux.HandleFunc("/api/books/{id}/ratings/me", func(w http.ResponseWriter, r *http.Request) {
-		bookID := r.PathValue("id")
-		r.URL.RawQuery = "book_id=" + bookID
-
-		if r.Method == http.MethodGet {
-			middleware.AuthMiddleware(ratingHandler.GetMyRatingForBook)(w, r)
 		} else {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
@@ -128,10 +134,37 @@ func main() {
 		}
 	})
 
+	mux.HandleFunc("/api/ratings/{id}/comments", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			middleware.AuthMiddleware(commentHandler.CreateComment)(w, r)
+		case http.MethodGet:
+			commentHandler.GetComments(w, r)
+		default:
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/api/comments/{id}", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodDelete {
+			middleware.AuthMiddleware(commentHandler.DeleteComment)(w, r)
+		} else {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/api/ratings/{id}", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPatch {
+			middleware.AuthMiddleware(ratingHandler.UpdateRating)(w, r)
+		} else {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
 	mux.HandleFunc("/api/users/{id}/followers", userHandler.GetFollowers)
 	mux.HandleFunc("/api/users/{id}/following", userHandler.GetFollowing)
 
-	mux.HandleFunc("/api/feed", feedHandler.GetFeed)
+	mux.HandleFunc("/api/feed", middleware.OptionalAuthMiddleware(feedHandler.GetFeed))
 
 	fs := http.FileServer(http.Dir("./static"))
 	mux.Handle("/", fs)

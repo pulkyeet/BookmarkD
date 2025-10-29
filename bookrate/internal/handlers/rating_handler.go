@@ -103,7 +103,19 @@ func (h *RatingHandler) GetBookRatings(w http.ResponseWriter, r *http.Request) {
 	if claims, ok := middleware.GetUserFromContext(r); ok {
 		userID = &claims.UserID
 	}
-	stats, err := h.ratingRepo.GetByBookID(bookID, userID)
+
+	sortBy := r.URL.Query().Get("sort_by")
+	validSorts := map[string]bool{
+		"newest":         true,
+		"most_liked":     true,
+		"highest_rating": true,
+	}
+	if sortBy != "" && !validSorts[sortBy] {
+		http.Error(w, "Invalid sort_by parameter", http.StatusBadRequest)
+		return
+	}
+
+	stats, err := h.ratingRepo.GetByBookID(bookID, userID, sortBy)
 	if err != nil {
 		log.Printf("Error getting ratings for book %d: %v", bookID, err)
 		http.Error(w, "Failed to get ratings", http.StatusInternalServerError)
@@ -228,4 +240,41 @@ func (h *RatingHandler) UnlikeRating(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *RatingHandler) UpdateRating(w http.ResponseWriter, r *http.Request) {
+	claims, ok := middleware.GetUserFromContext(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	ratingID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid rating ID", http.StatusBadRequest)
+		return
+	}
+	var req struct {
+		Rating int    `json:"rating"`
+		Review string `json:"review"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid Request Body", http.StatusBadRequest)
+		return
+	}
+	if req.Rating > 10 && req.Rating < 0 {
+		http.Error(w, "Rating must be between 1 and 10", http.StatusBadRequest)
+		return
+	}
+	rating, err := h.ratingRepo.Update(ratingID, claims.UserID, req.Rating, req.Review)
+	if err == sql.ErrNoRows {
+		http.Error(w, "Rating not found", http.StatusInternalServerError)
+		return
+	}
+	if err != nil {
+		log.Printf("Error updating rating: %v", err)
+		http.Error(w, "Failed to update rating", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(rating)
 }

@@ -48,7 +48,7 @@ RETURNING id, user_id, book_id, rating, review, status, created_at, updated_at`
 }
 
 // Get all ratings for a book with stats
-func (r *RatingRepository) GetByBookID(bookID int, userID *int) (*models.BookRatingStats, error) {
+func (r *RatingRepository) GetByBookID(bookID int, userID *int, sortBy string) (*models.BookRatingStats, error) {
 	statsQuery := `
 SELECT 
 	COALESCE(AVG(rating), 0) AS average_rating,
@@ -66,7 +66,8 @@ WHERE book_id = $1`
 SELECT
 	r.id, r.user_id, r.book_id, r.rating, r.review, r.created_at, r.updated_at,
 	u.username,
-	COUNT(rl.user_id) as like_count`
+	COUNT(DISTINCT rl.user_id) as like_count,
+	COUNT(DISTINCT c.id) as comment_count`
 
 	if userID != nil {
 		ratingsQuery += `,
@@ -77,9 +78,20 @@ SELECT
 FROM ratings r
 JOIN users u ON r.user_id = u.id
 LEFT JOIN review_likes rl ON r.id = rl.rating_id
+LEFT JOIN comments c ON r.id = c.rating_id
 WHERE r.book_id = $1
-GROUP BY r.id, u.username
-ORDER BY r.created_at DESC`
+GROUP BY r.id, r.user_id, r.book_id, r.rating, r.review, r.created_at, r.updated_at, u.username`
+
+	switch sortBy {
+	case "most_liked":
+		ratingsQuery += ` ORDER BY like_count DESC, r.created_at DESC`
+	case "highest_rating":
+		ratingsQuery += ` ORDER BY r.rating DESC, r.created_at DESC`
+	case "newest":
+		fallthrough
+	default:
+		ratingsQuery += ` ORDER BY r.created_at DESC`
+	}
 
 	var rows *sql.Rows
 	if userID != nil {
@@ -102,7 +114,7 @@ ORDER BY r.created_at DESC`
 			err := rows.Scan(
 				&rating.ID, &rating.UserID, &rating.BookID, &ratingValue, &reviewNull,
 				&rating.CreatedAt, &rating.UpdatedAt, &rating.Username,
-				&rating.LikeCount, &rating.LikedByUser,
+				&rating.LikeCount, &rating.CommentCount, &rating.LikedByUser,
 			)
 			if err != nil {
 				return nil, err
@@ -111,7 +123,7 @@ ORDER BY r.created_at DESC`
 			err := rows.Scan(
 				&rating.ID, &rating.UserID, &rating.BookID, &ratingValue, &reviewNull,
 				&rating.CreatedAt, &rating.UpdatedAt, &rating.Username,
-				&rating.LikeCount,
+				&rating.LikeCount, &rating.CommentCount,
 			)
 			if err != nil {
 				return nil, err
@@ -214,7 +226,8 @@ func (r *RatingRepository) GetFeed(requestingUserID *int, limit, offset int) ([]
         r.id, r.user_id, r.book_id, r.rating, r.review, r.status, r.created_at, r.updated_at,
         u.username,
         b.title, b.author, b.cover_url,
-        COUNT(rl.user_id) as like_count`
+        COUNT(DISTINCT rl.user_id) as like_count,
+        COUNT(DISTINCT c.id) as comment_count`
 
 	if requestingUserID != nil {
 		query += `,
@@ -225,7 +238,8 @@ func (r *RatingRepository) GetFeed(requestingUserID *int, limit, offset int) ([]
     FROM ratings r
     JOIN users u ON r.user_id = u.id
     JOIN books b ON r.book_id = b.id
-    LEFT JOIN review_likes rl ON r.id = rl.rating_id`
+    LEFT JOIN review_likes rl ON r.id = rl.rating_id
+    LEFT JOIN comments c ON r.id = c.rating_id`
 
 	args := []interface{}{}
 	argCount := 1
@@ -236,7 +250,7 @@ func (r *RatingRepository) GetFeed(requestingUserID *int, limit, offset int) ([]
 		query += ` WHERE r.user_id IN (SELECT following_id FROM follows WHERE follower_id = $1)`
 	}
 
-	query += ` GROUP BY r.id, u.username, b.title, b.author, b.cover_url`
+	query += ` GROUP BY r.id, r.user_id, r.book_id, r.rating, r.review, r.status, r.created_at, r.updated_at, u.username, b.title, b.author, b.cover_url`
 	query += ` ORDER BY r.created_at DESC LIMIT $` + fmt.Sprintf("%d", argCount) + ` OFFSET $` + fmt.Sprintf("%d", argCount+1)
 	args = append(args, limit, offset)
 
@@ -258,7 +272,7 @@ func (r *RatingRepository) GetFeed(requestingUserID *int, limit, offset int) ([]
 				&item.ID, &item.UserID, &item.BookID, &ratingValue, &reviewNull, &item.Status,
 				&item.CreatedAt, &item.UpdatedAt, &item.Username,
 				&item.BookTitle, &item.BookAuthor, &coverNull,
-				&item.LikeCount, &item.LikedByUser,
+				&item.LikeCount, &item.CommentCount, &item.LikedByUser,
 			)
 			if err != nil {
 				return nil, err
@@ -268,7 +282,7 @@ func (r *RatingRepository) GetFeed(requestingUserID *int, limit, offset int) ([]
 				&item.ID, &item.UserID, &item.BookID, &ratingValue, &reviewNull, &item.Status,
 				&item.CreatedAt, &item.UpdatedAt, &item.Username,
 				&item.BookTitle, &item.BookAuthor, &coverNull,
-				&item.LikeCount,
+				&item.LikeCount, &item.CommentCount,
 			)
 			if err != nil {
 				return nil, err
@@ -318,7 +332,7 @@ WHERE user_id = $1`
 }
 
 func (r *RatingRepository) LikeRating(userID, ratingID int) error {
-	query := `INSERT INTO review_likes VALUES ($1, $2) ON CONFLICT DO NOTHING`
+	query := `INSERT INTO review_likes VALUES ($1, $2) ON CONFLICT (user_id, rating_id) DO NOTHING`
 
 	_, err := r.db.Exec(query, userID, ratingID)
 	return err
@@ -355,4 +369,25 @@ func (r *RatingRepository) HasUserLiked(userID, ratingID int) (bool, error) {
 	var exists bool
 	err := r.db.QueryRow(query, userID, ratingID).Scan(&exists)
 	return exists, err
+}
+
+func (r *RatingRepository) Update(ratingID, userID, rating int, review string) (*models.Rating, error) {
+	query := `UPDATE ratings
+SET rating = $1, review = $2, updated_at = CURRENT_TIMESTAMP
+WHERE id = $3 AND user_id = $4
+RETURNING id, user_id, book_id, rating, review, status, created_at, updated_at`
+
+	ratingModel := &models.Rating{}
+	var reviewNull sql.NullString
+
+	err := r.db.QueryRow(query, rating, nullString(review), ratingID, userID).Scan(
+		&ratingModel.ID, &ratingModel.UserID, &ratingModel.BookID, &ratingModel.Rating, &reviewNull, &ratingModel.Status, &ratingModel.CreatedAt, &ratingModel.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	if err == sql.ErrNoRows {
+		return nil, sql.ErrNoRows
+	}
+	ratingModel.Review = reviewNull.String
+	return ratingModel, nil
 }

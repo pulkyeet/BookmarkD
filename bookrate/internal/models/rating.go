@@ -27,17 +27,19 @@ type BookRatingStats struct {
 
 type FeedItem struct {
 	Rating
-	Username    string `json:"username"`
-	BookTitle   string `json:"book_title"`
-	BookAuthor  string `json:"book_author"`
-	BookCover   string `json:"book_cover"`
-	LikeCount   int    `json:"like_count"`
-	LikedByUser bool   `json:"liked_by_user"`
+	Username     string `json:"username"`
+	BookTitle    string `json:"book_title"`
+	BookAuthor   string `json:"book_author"`
+	BookCover    string `json:"book_cover"`
+	LikeCount    int    `json:"like_count"`
+	LikedByUser  bool   `json:"liked_by_user"`
+	CommentCount int    `json:"comment_count"`
 }
 
 type RatingWithLikes struct {
 	Rating
-	Username    string `json:"username"`
-	LikeCount   int    `json:"likes"`
-	LikedByUser bool   `json:"liked_by_user"`
+	Username     string `json:"username"`
+	LikeCount    int    `json:"like_count"`
+	LikedByUser  bool   `json:"liked_by_user"`
+	CommentCount int    `json:"comment_count"`
 }

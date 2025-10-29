@@ -1,4 +1,4 @@
-import { api, isLoggedIn, updateNavigation } from './api.js';
+import { api, isLoggedIn, updateNavigation, getCurrentUserId } from './api.js';
 
 updateNavigation();
 
@@ -6,6 +6,8 @@ const userId = new URLSearchParams(window.location.search).get('id');
 if (!userId) {
     window.location.href = 'feed.html';
 }
+
+const currentUserId = getCurrentUserId();
 
 function showToast(message) {
     const toast = document.getElementById('toast');
@@ -34,11 +36,9 @@ async function loadProfile() {
         document.getElementById('followersCount').textContent = profile.followers_count;
         document.getElementById('followingCount').textContent = profile.following_count;
 
-        // Make follower/following counts clickable
         document.getElementById('followersBtn').addEventListener('click', () => showFollowModal('followers'));
         document.getElementById('followingBtn').addEventListener('click', () => showFollowModal('following'));
 
-        // Show follow button only if logged in and not own profile
         if (isLoggedIn()) {
             const myProfile = await api.getProfile();
             if (myProfile.user_id !== parseInt(userId)) {

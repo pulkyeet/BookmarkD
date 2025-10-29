@@ -19,7 +19,6 @@ export const api = {
                 headers,
             });
 
-            // Handle empty responses (like 204 No Content for delete)
             if (response.status === 204) {
                 return null;
             }
@@ -77,8 +76,8 @@ export const api = {
     },
 
     // Ratings
-    async getRatings(bookId) {
-        return this.request(`/books/${bookId}/ratings`);
+    async getRatings(bookId, sortBy = 'newest') {
+        return this.request(`/books/${bookId}/ratings?sort_by=${sortBy}`);
     },
 
     async createRating(bookId, rating, review, status = 'finished_reading') {
@@ -94,6 +93,13 @@ export const api = {
         });
     },
 
+    async updateRating(ratingId, rating, review) {
+        return this.request(`/ratings/${ratingId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ rating, review }),
+        });
+    },
+
     async getMyRatings() {
         return this.request('/users/me/ratings');
     },
@@ -106,6 +112,38 @@ export const api = {
         return this.request(`/books/${bookId}/ratings/me`);
     },
 
+    // Likes
+    async likeRating(ratingId) {
+        return this.request(`/ratings/${ratingId}/like`, {
+            method: 'POST',
+        });
+    },
+
+    async unlikeRating(ratingId) {
+        return this.request(`/ratings/${ratingId}/like`, {
+            method: 'DELETE',
+        });
+    },
+
+    // Comments
+    async getComments(ratingId) {
+        return this.request(`/ratings/${ratingId}/comments`);
+    },
+
+    async createComment(ratingId, text) {
+        return this.request(`/ratings/${ratingId}/comments`, {
+            method: 'POST',
+            body: JSON.stringify({ text }),
+        });
+    },
+
+    async deleteComment(commentId) {
+        return this.request(`/comments/${commentId}`, {
+            method: 'DELETE',
+        });
+    },
+
+    // Users
     async getUserProfile(userId) {
         return this.request(`/users/${userId}/profile`);
     },
@@ -134,10 +172,7 @@ export const api = {
     async getFeed(type = 'all', limit = 20, offset = 0) {
         return this.request(`/feed?type=${type}&limit=${limit}&offset=${offset}`);
     },
-
 };
-
-
 
 export function isLoggedIn() {
     return !!localStorage.getItem('token');
@@ -146,6 +181,18 @@ export function isLoggedIn() {
 export function logout() {
     localStorage.removeItem('token');
     window.location.href = 'index.html';
+}
+
+export function getCurrentUserId() {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.user_id;
+    } catch {
+        return null;
+    }
 }
 
 export function updateNavigation() {
