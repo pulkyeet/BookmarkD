@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"github.com/lib/pq"
 	"github.com/pulkyeet/bookrate/internal/models"
 	"strings"
 )
@@ -229,6 +230,147 @@ func (r *BookRepository) Delete(id int) error {
 		return fmt.Errorf("Book now found.")
 	}
 	return nil
+}
+
+func (r *BookRepository) ListWithGenres(limit, offset int, search, genreFilter string) ([]*models.BookWithGenres, error) {
+	query := `SELECT DISTINCT b.id, b.title, b.author, b.isbn, b.description, b.published_year, b.cover_url, b.created_at, b.updated_at
+FROM books b LEFT JOIN book_genres bg ON b.id = bg.book_id LEFT JOIN genres g ON bg.genre_id = g.id WHERE 1=1`
+	args := []interface{}{}
+	argCount := 1
+	if search != "" {
+		query += fmt.Sprintf(" AND (b.title ILIKE $%d OR b.author ILIKE $%d)", argCount, argCount)
+		args = append(args, "%"+search+"%")
+		argCount++
+	}
+	if genreFilter != "" {
+		query += fmt.Sprintf(" AND LOWER(g.name) = LOWER($%d)", argCount)
+		args = append(args, genreFilter)
+		argCount++
+	}
+	query += " ORDER BY b.created_at DESC"
+	query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCount, argCount+1)
+	args = append(args, limit, offset)
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	bookMap := make(map[int]*models.BookWithGenres)
+	bookOrder := []int{}
+
+	for rows.Next() {
+		var bookID int
+		book := &models.Book{}
+		var isbn, description, coverURL sql.NullString
+		var publishedYear sql.NullInt64
+
+		err := rows.Scan(
+			&bookID,
+			&book.Title,
+			&book.Author,
+			&isbn,
+			&description,
+			&publishedYear,
+			&coverURL,
+			&book.CreatedAt,
+			&book.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if _, exists := bookMap[bookID]; !exists {
+			book.ID = bookID
+			book.ISBN = isbn.String
+			book.Description = description.String
+			book.PublishedYear = int(publishedYear.Int64)
+			book.CoverURL = coverURL.String
+
+			bookMap[bookID] = &models.BookWithGenres{
+				Book:   *book,
+				Genres: []models.Genre{},
+			}
+			bookOrder = append(bookOrder, bookID)
+		}
+	}
+
+	// Now fetch genres for all books
+	bookIDs := make([]int, 0, len(bookMap))
+	for id := range bookMap {
+		bookIDs = append(bookIDs, id)
+	}
+
+	if len(bookIDs) > 0 {
+		genreQuery := `
+			SELECT bg.book_id, g.id, g.name, g.created_at
+			FROM book_genres bg
+			JOIN genres g ON bg.genre_id = g.id
+			WHERE bg.book_id = ANY($1)
+			ORDER BY g.name ASC`
+
+		genreRows, err := r.db.Query(genreQuery, pq.Array(bookIDs))
+		if err != nil {
+			return nil, err
+		}
+		defer genreRows.Close()
+
+		for genreRows.Next() {
+			var bookID int
+			var genre models.Genre
+			err := genreRows.Scan(&bookID, &genre.ID, &genre.Name, &genre.CreatedAt)
+			if err != nil {
+				return nil, err
+			}
+			if book, exists := bookMap[bookID]; exists {
+				book.Genres = append(book.Genres, genre)
+			}
+		}
+	}
+
+	// Return in original order
+	books := make([]*models.BookWithGenres, 0, len(bookOrder))
+	for _, id := range bookOrder {
+		books = append(books, bookMap[id])
+	}
+
+	return books, nil
+}
+
+func (r *BookRepository) GetByIDWithGenres(id int) (*models.BookWithGenres, error) {
+	book, err := r.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	genreQuery := `
+		SELECT g.id, g.name, g.created_at
+		FROM genres g
+		JOIN book_genres bg ON g.id = bg.genre_id
+		WHERE bg.book_id = $1
+		ORDER BY g.name ASC`
+
+	rows, err := r.db.Query(genreQuery, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	genres := []models.Genre{}
+	for rows.Next() {
+		var genre models.Genre
+		err := rows.Scan(&genre.ID, &genre.Name, &genre.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		genres = append(genres, genre)
+	}
+
+	return &models.BookWithGenres{
+		Book:   *book,
+		Genres: genres,
+	}, nil
 }
 
 func nullString(s string) interface{} {

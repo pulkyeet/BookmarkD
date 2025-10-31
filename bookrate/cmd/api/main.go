@@ -31,6 +31,7 @@ func main() {
 	ratingRepo := database.NewRatingRepository(db)
 	followRepo := database.NewFollowRepository(db)
 	commentRepo := database.NewCommentRepository(db)
+	genreRepo := database.NewGenreRepository(db)
 
 	ratingHandler := handlers.NewRatingHandler(ratingRepo)
 	bookHandler := handlers.NewBookHandler(bookRepo)
@@ -38,6 +39,7 @@ func main() {
 	feedHandler := handlers.NewFeedHandler(ratingRepo)
 	userHandler := handlers.NewUserHandler(userRepo, followRepo)
 	commentHandler := handlers.NewCommentHandler(commentRepo)
+	genreHandler := handlers.NewGenreHandler(genreRepo)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", healthHandler)
@@ -165,6 +167,8 @@ func main() {
 	mux.HandleFunc("/api/users/{id}/following", userHandler.GetFollowing)
 
 	mux.HandleFunc("/api/feed", middleware.OptionalAuthMiddleware(feedHandler.GetFeed))
+
+	mux.HandleFunc("/api/genres", genreHandler.GetAll)
 
 	fs := http.FileServer(http.Dir("./static"))
 	mux.Handle("/", fs)

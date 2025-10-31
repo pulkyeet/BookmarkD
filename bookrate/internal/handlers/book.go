@@ -60,7 +60,7 @@ func (h *BookHandler) Get(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid book ID", http.StatusBadRequest)
 		return
 	}
-	book, err := h.bookRepo.GetByID(id)
+	book, err := h.bookRepo.GetByIDWithGenres(id)
 	if err != nil {
 		if err.Error() == "book not found" {
 			http.Error(w, "Book not found", http.StatusNotFound)
@@ -83,6 +83,7 @@ func (h *BookHandler) List(w http.ResponseWriter, r *http.Request) {
 	limitStr := r.URL.Query().Get("limit")
 	offsetStr := r.URL.Query().Get("offset")
 	search := r.URL.Query().Get("search")
+	genre := r.URL.Query().Get("genre")
 
 	limit := 20
 	if limitStr != "" {
@@ -93,11 +94,12 @@ func (h *BookHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	offset := 0
 	if offsetStr != "" {
-		if o, err := strconv.Atoi(offsetStr); err == nil && o > 0 && o >= 0 {
+		if o, err := strconv.Atoi(offsetStr); err == nil && o >= 0 {
 			offset = o
 		}
 	}
-	books, err := h.bookRepo.List(limit, offset, search)
+
+	books, err := h.bookRepo.ListWithGenres(limit, offset, search, genre)
 	if err != nil {
 		log.Printf("List books error: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
