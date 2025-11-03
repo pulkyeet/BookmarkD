@@ -391,3 +391,42 @@ RETURNING id, user_id, book_id, rating, review, status, created_at, updated_at`
 	ratingModel.Review = reviewNull.String
 	return ratingModel, nil
 }
+
+func (r *RatingRepository) GetTopRatedByUser(userID, limit int) ([]map[string]interface{}, error) {
+	query := `SELECT r.id as rating_id, r.rating, r.review, r.status, r.created_at, r.updated_at, b.id as book_id, b.title, b.author, b.cover_url FROM ratings r JOIN books b ON r.book_id = b.id WHERE r.user_id = $1 AND r.rating > 0 ORDER BY r.rating DESC, r.created_at DESC LIMIT $2`
+	rows, err := r.db.Query(query, userID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	books := []map[string]interface{}{}
+	for rows.Next() {
+		var ratingID, bookID int
+		var rating int
+		var title, author string
+		var review sql.NullString
+		var status, createdAt, updatedAt, coverURL sql.NullString
+		err := rows.Scan(&ratingID, &rating, &review, &status, &createdAt, &updatedAt, &bookID, &title, &author, &coverURL)
+		if err != nil {
+			return nil, err
+		}
+		reviewSnippet := ""
+		if review.Valid && len(review.String) > 150 {
+			reviewSnippet = review.String[:150] + "..."
+		} else if review.Valid {
+			reviewSnippet = review.String
+		}
+		books = append(books, map[string]interface{}{
+			"rating_id":      ratingID,
+			"book_id":        bookID,
+			"title":          title,
+			"author":         author,
+			"cover_url":      coverURL,
+			"rating":         rating,
+			"review_snippet": reviewSnippet,
+			"created_at":     createdAt,
+			"updated_at":     updatedAt,
+		})
+	}
+	return books, nil
+}

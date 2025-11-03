@@ -42,6 +42,7 @@ func main() {
 	commentHandler := handlers.NewCommentHandler(commentRepo)
 	genreHandler := handlers.NewGenreHandler(genreRepo)
 	listHandler := handlers.NewListHandler(listRepo)
+	embedHandler := handlers.NewEmbedHandler(ratingRepo, listRepo, userRepo)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", healthHandler)
@@ -204,8 +205,9 @@ func main() {
 	mux.HandleFunc("/api/users/me/bookmarked-lists", middleware.AuthMiddleware(listHandler.GetBookmarkedLists))
 	mux.HandleFunc("/api/lists/popular", listHandler.GetPopularLists)
 	mux.HandleFunc("/api/users/{id}/lists", listHandler.GetUserLists)
-
 	mux.HandleFunc("/api/genres", genreHandler.GetAll)
+	mux.HandleFunc("/api/embed/users/{id}/books", embedHandler.GetUserBooks)
+	mux.HandleFunc("/api/embed/lists/{id}", embedHandler.GetListBooks)
 
 	fs := http.FileServer(http.Dir("./static"))
 	mux.Handle("/", fs)
