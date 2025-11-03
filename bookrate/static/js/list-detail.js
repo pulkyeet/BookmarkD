@@ -43,6 +43,14 @@ async function loadList() {
         document.getElementById('listCreated').textContent = `Created ${new Date(list.created_at).toLocaleDateString()}`;
         document.getElementById('listCreator').textContent = `by ${list.username}`;
 
+        if (list.public) {
+            const embedBtn = document.getElementById('embedBtn');
+            embedBtn.classList.remove('hidden');
+            embedBtn.addEventListener('click', () => {
+                window.location.href = `embed.html?list=${listId}`;
+            });
+        }
+
         books = list.books || [];
 
         loading.classList.add('hidden');

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embed Generator - BookmarkD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-900 text-gray-100">
+<nav class="glass-nav fixed w-full z-50 top-0">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <a href="index.html" class="flex items-center gap-3">
+            <span class="text-2xl font-bold gradient-text">BookmarkD</span>
+        </a>
+        <div class="flex items-center space-x-4">
+            <a href="feed.html" class="hover:text-blue-400 transition">Feed</a>
+            <a href="books.html" class="hover:text-blue-400 transition">Browse</a>
+            <a href="profile.html" class="hover:text-blue-400 transition">Profile</a>
+            <button id="logoutBtn" class="btn-secondary">Logout</button>
+        </div>
+    </div>
+</nav>
+
+<main class="pt-24 pb-12">
+    <div class="container mx-auto px-6 max-w-6xl">
+        <h1 class="text-4xl font-bold mb-2">Embed Your Books</h1>
+        <p class="text-gray-400 mb-8">Showcase your books on your personal website or blog</p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Configuration Panel -->
+            <div class="space-y-6">
+                <div class="auth-card">
+                    <h2 class="text-xl font-bold mb-4">Configure Embed</h2>
+
+                    <!-- Source Selection -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">Source</label>
+                        <select id="sourceType" class="input-field w-full">
+                            <option value="top_rated">My Top Rated Books</option>
+                            <option value="list">Specific List</option>
+                        </select>
+                    </div>
+
+                    <!-- List Selector (hidden by default) -->
+                    <div id="listSelector" class="mb-4 hidden">
+                        <label class="block text-sm font-medium mb-2">Select List</label>
+                        <select id="listSelect" class="input-field w-full">
+                            <option value="">Loading lists...</option>
+                        </select>
+                    </div>
+
+                    <!-- Count -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">Number of Books</label>
+                        <select id="bookCount" class="input-field w-full">
+                            <option value="3">3 books</option>
+                            <option value="5" selected>5 books</option>
+                            <option value="10">10 books</option>
+                        </select>
+                    </div>
+
+                    <!-- Style -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">Display Style</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button class="style-btn active" data-style="grid">
+                                <div class="text-2xl mb-1">⊞</div>
+                                Grid
+                            </button>
+                            <button class="style-btn" data-style="list">
+                                <div class="text-2xl mb-1">☰</div>
+                                List
+                            </button>
+                            <button class="style-btn" data-style="minimal">
+                                <div class="text-2xl mb-1">▭</div>
+                                Minimal
+                            </button>
+                        </div>
+                    </div>
+
+                    <button id="generateBtn" class="btn-primary w-full">Generate Embed Code</button>
+                </div>
+
+                <!-- Code Output -->
+                <div id="codeOutput" class="auth-card hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold">Embed Code</h3>
+                        <div class="flex gap-2">
+                            <button class="code-tab active" data-tab="iframe">Iframe</button>
+                            <button class="code-tab" data-tab="script">Script Tag</button>
+                        </div>
+                    </div>
+
+                    <div id="iframeCode" class="code-block">
+                        <pre class="bg-gray-800 p-4 rounded text-xs overflow-x-auto"><code id="iframeCodeContent"></code></pre>
+                        <button id="copyIframe" class="btn-secondary w-full mt-2">Copy Code</button>
+                    </div>
+
+                    <div id="scriptCode" class="code-block hidden">
+                        <pre class="bg-gray-800 p-4 rounded text-xs overflow-x-auto"><code id="scriptCodeContent"></code></pre>
+                        <button id="copyScript" class="btn-secondary w-full mt-2">Copy Code</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Preview -->
+            <div class="auth-card">
+                <h2 class="text-xl font-bold mb-4">Live Preview</h2>
+                <div class="border border-gray-700 rounded-lg p-4 bg-gray-800 min-h-[400px]">
+                    <iframe id="previewFrame" class="w-full h-full min-h-[400px] border-0"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<style>
+    .style-btn {
+        padding: 16px;
+        border: 2px solid #334155;
+        border-radius: 8px;
+        background: #1e293b;
+        color: #9ca3af;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 12px;
+    }
+    .style-btn:hover {
+        border-color: #3b82f6;
+        color: #60a5fa;
+    }
+    .style-btn.active {
+        border-color: #3b82f6;
+        background: rgba(59, 130, 246, 0.1);
+        color: #60a5fa;
+    }
+    .code-tab {
+        padding: 8px 16px;
+        border-radius: 6px;
+        background: transparent;
+        color: #9ca3af;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 14px;
+        border: 1px solid transparent;
+    }
+    .code-tab:hover {
+        color: #60a5fa;
+    }
+    .code-tab.active {
+        background: rgba(59, 130, 246, 0.1);
+        color: #60a5fa;
+        border-color: #3b82f6;
+    }
+    .toast {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.3s;
+        z-index: 1000;
+    }
+    .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
+
+<script src="js/embed.js"></script>
+</body>
+</html>
