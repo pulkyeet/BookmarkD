@@ -421,11 +421,11 @@ func (r *RatingRepository) GetTopRatedByUser(userID, limit int) ([]map[string]in
 			"book_id":        bookID,
 			"title":          title,
 			"author":         author,
-			"cover_url":      coverURL,
+			"cover_url":      coverURL.String,
 			"rating":         rating,
 			"review_snippet": reviewSnippet,
-			"created_at":     createdAt,
-			"updated_at":     updatedAt,
+			"created_at":     createdAt.String,
+			"updated_at":     updatedAt.String,
 		})
 	}
 	return books, nil

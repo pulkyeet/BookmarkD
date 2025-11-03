@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Embed</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        .bookmarkd-embed {
+            max-width: 100%;
+        }
+        .book-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 12px;
+            transition: all 0.2s;
+        }
+        .book-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+        .book-cover {
+            width: 100%;
+            aspect-ratio: 2/3;
+            object-fit: cover;
+            border-radius: 4px;
+            background: #334155;
+        }
+        .rating-stars {
+            color: #fbbf24;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 4px;
+            background: rgba(59, 130, 246, 0.1);
+            color: #60a5fa;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100">
+<div class="bookmarkd-embed" id="embedContainer">
+    <div id="loading" class="text-center py-8">
+        <div class="animate-pulse text-gray-400">Loading...</div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://localhost:8080';
+
+    async function loadEmbed() {
+        const params = new URLSearchParams(window.location.search);
+        const userId = params.get('user');
+        const count = params.get('count') || 5;
+        const style = params.get('style') || 'grid';
+
+        if (!userId) {
+            document.getElementById('loading').innerHTML = '<p class="text-red-400">User ID required</p>';
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/api/embed/users/${userId}/books?count=${count}`);
+            if (!res.ok) throw new Error('Failed to load');
+
+            const data = await res.json();
+            renderEmbed(data, style);
+        } catch (err) {
+            document.getElementById('loading').innerHTML = '<p class="text-red-400">Failed to load books</p>';
+        }
+    }
+
+    function renderEmbed(data, style) {
+        const container = document.getElementById('embedContainer');
+
+        let gridClass = 'grid gap-4';
+        if (style === 'grid') {
+            gridClass += ' grid-cols-2 sm:grid-cols-3 md:grid-cols-5';
+        } else if (style === 'list') {
+            gridClass += ' grid-cols-1';
+        } else {
+            gridClass += ' grid-cols-3 sm:grid-cols-5';
+        }
+
+        const booksHTML = data.books.map(book => {
+            const stars = '★'.repeat(book.rating) + '☆'.repeat(10 - book.rating);
+
+            if (style === 'list') {
+                return `
+                        <div class="book-card flex gap-3">
+                            <img src="${book.cover_url || '/placeholder.jpg'}" alt="${book.title}" class="w-16 h-24 object-cover rounded">
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-semibold text-sm truncate">${book.title}</h3>
+                                <p class="text-xs text-gray-400 truncate">${book.author}</p>
+                                <div class="rating-stars text-xs mt-1">${stars}</div>
+                                ${book.review_snippet ? `<p class="text-xs text-gray-300 mt-2 line-clamp-2">${book.review_snippet}</p>` : ''}
+                            </div>
+                        </div>
+                    `;
+            } else if (style === 'minimal') {
+                return `
+                        <div class="book-card">
+                            <img src="${book.cover_url || '/placeholder.jpg'}" alt="${book.title}" class="book-cover">
+                        </div>
+                    `;
+            } else {
+                return `
+                        <div class="book-card">
+                            <img src="${book.cover_url || '/placeholder.jpg'}" alt="${book.title}" class="book-cover mb-2">
+                            <h3 class="font-semibold text-xs truncate">${book.title}</h3>
+                            <p class="text-xs text-gray-400 truncate">${book.author}</p>
+                            <div class="rating-stars text-xs mt-1">${stars}</div>
+                        </div>
+                    `;
+            }
+        }).join('');
+
+        container.innerHTML = `
+                <div class="mb-4">
+                    <h2 class="text-lg font-bold mb-1">${data.username}'s Top Books</h2>
+                    <div class="text-xs text-gray-400">Powered by BookmarkD</div>
+                </div>
+                <div class="${gridClass}">
+                    ${booksHTML}
+                </div>
+                <div class="mt-4 text-center">
+                    <a href="${API_BASE}/user-profile.html?id=${data.user_id}" target="_blank" class="badge">
+                        View full profile on BookmarkD →
+                    </a>
+                </div>
+            `;
+    }
+
+    loadEmbed();
+</script>
+</body>
+</html>
