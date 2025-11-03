@@ -32,6 +32,7 @@ func main() {
 	followRepo := database.NewFollowRepository(db)
 	commentRepo := database.NewCommentRepository(db)
 	genreRepo := database.NewGenreRepository(db)
+	listRepo := database.NewListRepository(db)
 
 	ratingHandler := handlers.NewRatingHandler(ratingRepo)
 	bookHandler := handlers.NewBookHandler(bookRepo)
@@ -40,17 +41,14 @@ func main() {
 	userHandler := handlers.NewUserHandler(userRepo, followRepo)
 	commentHandler := handlers.NewCommentHandler(commentRepo)
 	genreHandler := handlers.NewGenreHandler(genreRepo)
+	listHandler := handlers.NewListHandler(listRepo)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", healthHandler)
 	mux.HandleFunc("/api/auth/signup", authHandler.Signup)
 	mux.HandleFunc("/api/auth/login", authHandler.Login)
-
-	//mux.HandleFunc("/", homeHandler)
-
 	// Protected route
 	mux.HandleFunc("/api/profile", middleware.AuthMiddleware(profileHandler))
-
 	mux.HandleFunc("/api/books", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			bookHandler.List(w, r)
@@ -60,7 +58,6 @@ func main() {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
-
 	mux.HandleFunc("/api/books/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			bookHandler.Get(w, r)
@@ -72,20 +69,17 @@ func main() {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
-
 	mux.HandleFunc("/api/books/{id}/ratings/me", func(w http.ResponseWriter, r *http.Request) {
 		bookID := r.PathValue("id")
 		query := r.URL.Query()
 		query.Set("book_id", bookID)
 		r.URL.RawQuery = query.Encode()
-
 		if r.Method == http.MethodGet {
 			middleware.AuthMiddleware(ratingHandler.GetMyRatingForBook)(w, r)
 		} else {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
-
 	mux.HandleFunc("/api/books/{id}/ratings", func(w http.ResponseWriter, r *http.Request) {
 		bookID := r.PathValue("id")
 		query := r.URL.Query()
@@ -103,7 +97,6 @@ func main() {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
-
 	mux.HandleFunc("/api/users/me/ratings", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			middleware.AuthMiddleware(ratingHandler.GetMyRatings)(w, r)
@@ -111,7 +104,6 @@ func main() {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
-
 	mux.HandleFunc("/api/ratings/{id}/like", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
@@ -122,9 +114,7 @@ func main() {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
-
 	mux.HandleFunc("/api/users/{id}/profile", userHandler.GetProfile)
-
 	mux.HandleFunc("/api/users/{id}/follow", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
@@ -135,7 +125,6 @@ func main() {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
-
 	mux.HandleFunc("/api/ratings/{id}/comments", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
@@ -146,7 +135,6 @@ func main() {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
-
 	mux.HandleFunc("/api/comments/{id}", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodDelete {
 			middleware.AuthMiddleware(commentHandler.DeleteComment)(w, r)
@@ -154,7 +142,6 @@ func main() {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
-
 	mux.HandleFunc("/api/ratings/{id}", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPatch {
 			middleware.AuthMiddleware(ratingHandler.UpdateRating)(w, r)
@@ -162,11 +149,61 @@ func main() {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
-
 	mux.HandleFunc("/api/users/{id}/followers", userHandler.GetFollowers)
 	mux.HandleFunc("/api/users/{id}/following", userHandler.GetFollowing)
-
 	mux.HandleFunc("/api/feed", middleware.OptionalAuthMiddleware(feedHandler.GetFeed))
+	mux.HandleFunc("/api/books/trending", bookHandler.GetTrending)
+	mux.HandleFunc("/api/books/popular", bookHandler.GetPopular)
+	mux.HandleFunc("/api/books/{id}/similar", bookHandler.GetSimilar)
+	mux.HandleFunc("/api/lists", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			middleware.AuthMiddleware(listHandler.Create)(w, r)
+		} else {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
+	mux.HandleFunc("/api/lists/{id}", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			listHandler.GetByID(w, r)
+		case http.MethodPut:
+			middleware.AuthMiddleware(listHandler.Update)(w, r)
+		case http.MethodDelete:
+			middleware.AuthMiddleware(listHandler.Delete)(w, r)
+		default:
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
+	mux.HandleFunc("/api/lists/{id}/books", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			middleware.AuthMiddleware(listHandler.AddBook)(w, r)
+		case http.MethodPut:
+			middleware.AuthMiddleware(listHandler.ReorderBooks)(w, r)
+		default:
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
+	mux.HandleFunc("/api/lists/{id}/books/{bookID}", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodDelete {
+			middleware.AuthMiddleware(listHandler.RemoveBook)(w, r)
+		} else {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
+	mux.HandleFunc("/api/lists/{id}/bookmark", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			middleware.AuthMiddleware(listHandler.BookmarkList)(w, r)
+		case http.MethodDelete:
+			middleware.AuthMiddleware(listHandler.UnbookmarkList)(w, r)
+		default:
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
+	mux.HandleFunc("/api/users/me/bookmarked-lists", middleware.AuthMiddleware(listHandler.GetBookmarkedLists))
+	mux.HandleFunc("/api/lists/popular", listHandler.GetPopularLists)
+	mux.HandleFunc("/api/users/{id}/lists", listHandler.GetUserLists)
 
 	mux.HandleFunc("/api/genres", genreHandler.GetAll)
 
@@ -200,7 +237,6 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message":  "Profile Data",

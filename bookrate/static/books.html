@@ -27,7 +27,10 @@
             <span class="text-2xl font-bold gradient-text">BookmarkD</span>
         </a>
         <div class="flex items-center space-x-4">
+            <a href="feed.html" class="hover:text-blue-400 transition">Feed</a>
             <a href="books.html" class="text-blue-400">Browse</a>
+            <a href="my-lists.html" id="myListsLink" class="hidden hover:text-blue-400 transition">My Lists</a>
+            <a href="browse-lists.html" class="hover:text-blue-400 transition">Lists</a>
             <a href="profile.html" id="profileLink" class="hidden hover:text-blue-400 transition">Profile</a>
             <a href="login.html" id="loginLink" class="hover:text-blue-400 transition">Login</a>
             <button id="logoutBtn" class="hidden btn-secondary">Logout</button>
@@ -39,10 +42,24 @@
     <div class="container mx-auto px-6">
         <div class="mb-8">
             <h1 class="text-4xl font-bold mb-4">Browse Books</h1>
-            <div class="flex gap-4">
-                <input type="text" id="searchInput" placeholder="Search by title or author..."
-                       class="input-field flex-1">
-                <button id="searchBtn" class="btn-primary">Search</button>
+
+            <!-- Tabs -->
+            <div class="flex gap-4 mb-4 border-b border-gray-700">
+                <button id="allTab" class="tab-btn active">All Books</button>
+                <button id="trendingTab" class="tab-btn">Trending</button>
+                <button id="popularTab" class="tab-btn">Popular</button>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1">
+                    <input type="text" id="searchInput" placeholder="Search by title or author..."
+                           class="input-field w-full text-lg py-3">
+                </div>
+                <select id="genreFilter" class="input-field w-full md:w-48">
+                    <option value="">All Genres</option>
+                </select>
+                <button id="searchBtn" class="btn-primary px-8">Search</button>
             </div>
         </div>
 
@@ -60,6 +77,31 @@
         </div>
     </div>
 </main>
+
+<style>
+    .tab-btn {
+        padding: 0.75rem 1.5rem;
+        color: #9ca3af;
+        border-bottom: 2px solid transparent;
+        transition: all 0.3s;
+    }
+    .tab-btn:hover {
+        color: #60a5fa;
+    }
+    .tab-btn.active {
+        color: #60a5fa;
+        border-bottom-color: #60a5fa;
+    }
+    .genre-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+        border-radius: 0.25rem;
+        margin-right: 0.25rem;
+    }
+</style>
 
 <script type="module" src="js/books.js"></script>
 </body>

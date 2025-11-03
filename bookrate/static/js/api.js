@@ -172,6 +172,97 @@ export const api = {
     async getFeed(type = 'all', limit = 20, offset = 0) {
         return this.request(`/feed?type=${type}&limit=${limit}&offset=${offset}`);
     },
+    // Genres
+    async getGenres() {
+        return this.request('/genres');
+    },
+
+    // Discovery
+    async getTrendingBooks(period = 'week', limit = 20) {
+        return this.request(`/books/trending?period=${period}&limit=${limit}`);
+    },
+
+    async getPopularBooks(minRatings = 10, limit = 20) {
+        return this.request(`/books/popular?min_ratings=${minRatings}&limit=${limit}`);
+    },
+
+    async getSimilarBooks(bookId, limit = 10) {
+        return this.request(`/books/${bookId}/similar?limit=${limit}`);
+    },
+
+    // Lists
+    async createList(name, description, isPublic) {
+        return this.request('/lists', {
+            method: 'POST',
+            body: JSON.stringify({ name, description, public: isPublic }),
+        });
+    },
+
+    async getUserLists(userId) {
+        return this.request(`/users/${userId}/lists`);
+    },
+
+    async getMyLists() {
+        const userId = getCurrentUserId();
+        return this.request(`/users/${userId}/lists`);
+    },
+
+    async getList(listId) {
+        return this.request(`/lists/${listId}`);
+    },
+
+    async updateList(listId, name, description, isPublic) {
+        return this.request(`/lists/${listId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ name, description, public: isPublic }),
+        });
+    },
+
+    async deleteList(listId) {
+        return this.request(`/lists/${listId}`, {
+            method: 'DELETE',
+        });
+    },
+
+    async addBookToList(listId, bookId, position = 0) {
+        return this.request(`/lists/${listId}/books`, {
+            method: 'POST',
+            body: JSON.stringify({ book_id: bookId, position }),
+        });
+    },
+
+    async removeBookFromList(listId, bookId) {
+        return this.request(`/lists/${listId}/books/${bookId}`, {
+            method: 'DELETE',
+        });
+    },
+
+    async reorderListBooks(listId, books) {
+        return this.request(`/lists/${listId}/books`, {
+            method: 'PUT',
+            body: JSON.stringify({ books }),
+        });
+    },
+
+    async bookmarkList(listId) {
+        return this.request(`/lists/${listId}/bookmark`, {
+            method: 'POST',
+        });
+    },
+
+    async unbookmarkList(listId) {
+        return this.request(`/lists/${listId}/bookmark`, {
+            method: 'DELETE',
+        });
+    },
+
+    async getBookmarkedLists() {
+        return this.request('/users/me/bookmarked-lists');
+    },
+
+    async getPopularLists(limit = 20) {
+        return this.request(`/lists/popular?limit=${limit}`);
+    },
 };
 
 export function isLoggedIn() {

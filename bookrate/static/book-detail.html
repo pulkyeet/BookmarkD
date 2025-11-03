@@ -27,7 +27,9 @@
             <span class="text-2xl font-bold gradient-text">BookmarkD</span>
         </a>
         <div class="flex items-center space-x-4">
+            <a href="feed.html" class="hover:text-blue-400 transition">Feed</a>
             <a href="books.html" class="hover:text-blue-400 transition">Browse</a>
+            <a href="my-lists.html" id="myListsLink" class="hidden hover:text-blue-400 transition">My Lists</a>
             <a href="profile.html" id="profileLink" class="hidden hover:text-blue-400 transition">Profile</a>
             <a href="login.html" id="loginLink" class="hover:text-blue-400 transition">Login</a>
             <button id="logoutBtn" class="hidden btn-secondary">Logout</button>
@@ -63,8 +65,10 @@
                         </div>
                     </div>
 
+                    <div id="bookGenres" class="mb-4"></div>
+
                     <div class="mb-6">
-                        <p id="bookYear" class="text-sm text-gray-500 mb-2"></p>
+                        <p id="publishedYear" class="text-sm text-gray-500 mb-2"></p>
                         <p id="bookISBN" class="text-sm text-gray-500"></p>
                     </div>
 
@@ -102,7 +106,7 @@
                                     <button type="button" class="rating-btn" data-rating="9">9</button>
                                     <button type="button" class="rating-btn" data-rating="10">10</button>
                                 </div>
-                                <input type="hidden" id="ratingValue" required>
+                                <input type="hidden" id="ratingValue">
                             </div>
 
                             <div class="mb-4">
@@ -111,7 +115,8 @@
                                           placeholder="Share your thoughts..."></textarea>
                             </div>
 
-                            <button type="submit" class="btn-primary">Submit Rating</button>
+                            <button type="submit" class="btn-primary w-full">Submit Rating</button>
+                            <button type="button" id="addToListBtn" class="btn-secondary w-full mt-2">Add to List</button>
                         </form>
                     </div>
 
@@ -137,11 +142,31 @@
                     No reviews yet. Be the first to rate!
                 </div>
             </div>
+
+            <!-- Similar Books Section -->
+            <div id="similarBooksSection" class="hidden mt-12">
+                <h2 class="text-2xl font-bold mb-6">You Might Also Like</h2>
+                <div id="similarBooksGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"></div>
+            </div>
         </div>
     </div>
 </main>
 
-<script type="module" src="js/book-detail.js"></script>
+<!-- Add to List Modal -->
+<div id="addToListModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold">Add to List</h3>
+            <button id="closeModal" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+        </div>
+        <div id="listSelectionContainer" class="max-h-64 overflow-y-auto mb-4">
+            <!-- Lists will be loaded here -->
+        </div>
+        <button id="confirmAddToList" class="btn-primary w-full">Add to Selected Lists</button>
+    </div>
+</div>
+
+<script type="module" src="js/book-detail.js?v=3"></script>
 
 <!-- Toast Notification -->
 <div id="toast" class="toast"></div>
@@ -173,16 +198,27 @@
     .toast.error {
         background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     }
-</style>
-<style>
+
+    .genre-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+        border-radius: 0.25rem;
+        margin-right: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+
     .status-btn {
-        padding: 8px 16px;
+        padding: 10px 20px;
         border: 2px solid #4b5563;
         border-radius: 8px;
         background: transparent;
         color: #9ca3af;
         cursor: pointer;
         transition: all 0.3s;
+        font-weight: 600;
     }
     .status-btn:hover {
         border-color: #3b82f6;
@@ -192,6 +228,55 @@
         border-color: #3b82f6;
         background: #3b82f6;
         color: white;
+    }
+
+    .rating-input-wrapper {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .rating-btn {
+        width: 45px;
+        height: 45px;
+        border: 2px solid #4b5563;
+        border-radius: 8px;
+        background: transparent;
+        color: #9ca3af;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 700;
+        font-size: 16px;
+    }
+    .rating-btn:hover {
+        border-color: #3b82f6;
+        color: #3b82f6;
+        transform: scale(1.1);
+    }
+    .rating-btn.selected {
+        border-color: #3b82f6;
+        background: #3b82f6;
+        color: white;
+    }
+    .list-selection-card {
+        background: rgba(31, 41, 55, 0.5);
+        border: 2px solid rgba(75, 85, 99, 0.5);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .list-selection-card:hover {
+        border-color: rgba(59, 130, 246, 0.5);
+        background: rgba(31, 41, 55, 0.8);
+    }
+
+    .list-selection-card.selected {
+        border-color: #3b82f6;
+        background: rgba(59, 130, 246, 0.1);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
     }
 </style>
 

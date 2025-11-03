@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browse Lists - BookmarkD</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-900 text-gray-100">
+<nav class="glass-nav fixed w-full z-50 top-0">
+  <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+    <a href="index.html" class="flex items-center gap-3">
+      <div class="logo-placeholder">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="8" fill="url(#gradient)"/>
+          <path d="M12 10H20C24 10 26 12 26 16C26 20 24 22 20 22H12V10Z" fill="white" opacity="0.9"/>
+          <path d="M12 22H21C25 22 27 24 27 28C27 32 25 34 21 34H12V22Z" fill="white" opacity="0.7"/>
+          <defs>
+            <linearGradient id="gradient" x1="0" y1="0" x2="40" y2="40">
+              <stop stop-color="#3b82f6"/>
+              <stop offset="1" stop-color="#8b5cf6"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <span class="text-2xl font-bold gradient-text">BookmarkD</span>
+    </a>
+    <div class="flex items-center space-x-4">
+      <a href="feed.html" class="hover:text-blue-400 transition">Feed</a>
+      <a href="books.html" class="hover:text-blue-400 transition">Browse</a>
+      <a href="my-lists.html" id="myListsLink" class="hidden hover:text-blue-400 transition">My Lists</a>
+      <a href="browse-lists.html" class="text-blue-400">Lists</a>
+      <a href="profile.html" id="profileLink" class="hidden hover:text-blue-400 transition">Profile</a>
+      <a href="login.html" id="loginLink" class="hover:text-blue-400 transition">Login</a>
+      <button id="logoutBtn" class="hidden btn-secondary">Logout</button>
+    </div>
+  </div>
+</nav>
+
+<main class="pt-24 pb-12">
+  <div class="container mx-auto px-6">
+    <div class="mb-8">
+      <h1 class="text-4xl font-bold mb-4">Browse Lists</h1>
+      <div class="flex gap-4 border-b border-gray-700">
+        <button id="popularTab" class="tab-btn active">Popular Lists</button>
+        <button id="bookmarkedTab" class="tab-btn hidden">My Bookmarks</button>
+      </div>
+    </div>
+
+    <div id="loading" class="text-center py-12">
+      <div class="spinner"></div>
+      <p class="mt-4 text-gray-400">Loading lists...</p>
+    </div>
+
+    <div id="listsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden"></div>
+
+    <div id="emptyState" class="hidden text-center py-12">
+      <p class="text-gray-400">No lists found</p>
+    </div>
+  </div>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<style>
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.3s;
+    z-index: 1000;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .toast.error {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  }
+  .tab-btn {
+    padding: 0.75rem 1.5rem;
+    color: #9ca3af;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s;
+  }
+  .tab-btn:hover {
+    color: #60a5fa;
+  }
+  .tab-btn.active {
+    color: #60a5fa;
+    border-bottom-color: #60a5fa;
+  }
+  .list-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(17, 24, 39, 0.8));
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s;
+  }
+  .list-card:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+    transform: translateY(-2px);
+  }
+</style>
+
+<script type="module" src="js/browse-lists.js"></script>
+</body>
+</html>

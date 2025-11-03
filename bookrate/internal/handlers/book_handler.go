@@ -170,3 +170,92 @@ func (h *BookHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func (h *BookHandler) GetSimilar(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(parts) <= 3 {
+		http.Error(w, "Invalid URL", http.StatusBadRequest)
+		return
+	}
+	bookID, err := strconv.Atoi(parts[2])
+	if err != nil {
+		http.Error(w, "Invalid book ID", http.StatusBadRequest)
+		return
+	}
+	limit := 10
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 && l <= 50 {
+			limit = l
+		}
+	}
+	books, err := h.bookRepo.GetSimilarBooks(bookID, limit)
+	if err != nil {
+		log.Printf("Get similar books error: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(books)
+}
+
+func (h *BookHandler) GetTrending(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	period := r.URL.Query().Get("period")
+	days := 7
+	switch period {
+	case "week":
+		days = 7
+	case "month":
+		days = 30
+	default:
+		days = 7
+	}
+	limit := 20
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 && l <= 100 {
+			limit = l
+		}
+	}
+	books, err := h.bookRepo.GetTrendingBooks(days, limit)
+	if err != nil {
+		log.Printf("Get trending books error: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(books)
+}
+
+func (h *BookHandler) GetPopular(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	minRatings := 10
+	if minStr := r.URL.Query().Get("min_ratings"); minStr != "" {
+		if min, err := strconv.Atoi(minStr); err == nil && min > 0 {
+			minRatings = min
+		}
+	}
+	limit := 20
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 && l <= 100 {
+			limit = l
+		}
+	}
+	books, err := h.bookRepo.GetPopularBooks(minRatings, limit)
+	if err != nil {
+		log.Printf("Get popular books error: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(books)
+}
