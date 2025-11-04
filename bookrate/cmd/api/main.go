@@ -3,20 +3,28 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
 	"github.com/pulkyeet/bookrate/internal/database"
 	"github.com/pulkyeet/bookrate/internal/handlers"
 	"github.com/pulkyeet/bookrate/internal/middleware"
-	"log"
-	"net/http"
 )
 
 func main() {
+
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found. Using environment variables")
+	}
+
 	dbConfig := database.Config{
-		Host:     "localhost",
+		Host:     os.Getenv("DB_HOST"),
 		Port:     5433,
-		User:     "bookrate",
-		Password: "localdev2178",
-		DBName:   "bookrate",
+		User:     os.Getenv("DB_USER"),
+		Password: os.Getenv("DB_PASSWORD"),
+		DBName:   os.Getenv("DB_NAME"),
 	}
 
 	db, err := database.Connect(dbConfig)

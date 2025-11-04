@@ -1,0 +1,2 @@
+DROP IF TABLE EXISTS book_genres;
+DROP IF TABLE EXISTS genres;

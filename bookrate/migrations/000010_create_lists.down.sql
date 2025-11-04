@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS list_books;
+DROP TABLE IF EXISTS lists;
