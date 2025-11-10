@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Logging in...</title>
+    </head>
+    <body>
+        <p>Logging you in...</p>
+        <script>
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get("token");
+
+            if (token) {
+                // Decode JWT to get user info
+                const payload = JSON.parse(atob(token.split(".")[1]));
+                const user = {
+                    id: payload.user_id,
+                    email: payload.email,
+                    username: payload.username,
+                };
+
+                localStorage.setItem("token", token);
+                localStorage.setItem("user", JSON.stringify(user));
+                window.location.href = "/";
+            } else {
+                window.location.href = "/login.html";
+            }
+        </script>
+    </body>
+</html>

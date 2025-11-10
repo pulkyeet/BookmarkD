@@ -2,13 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
-	"github.com/pulkyeet/bookrate/internal/database"
-	"github.com/pulkyeet/bookrate/internal/middleware"
-	"github.com/pulkyeet/bookrate/internal/models"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/pulkyeet/bookrate/internal/database"
+	"github.com/pulkyeet/bookrate/internal/middleware"
+	"github.com/pulkyeet/bookrate/internal/models"
 )
 
 type UserHandler struct {
@@ -151,4 +152,42 @@ func (h *UserHandler) GetFollowing(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(following)
+}
+
+type UserHandlerWithStats struct {
+	*UserHandler
+	ratingRepo *database.RatingRepository
+}
+
+func NewUserHandlerWithStats(userRepo *database.UserRepository, followRepo *database.FollowRepository, ratingRepo *database.RatingRepository) *UserHandlerWithStats {
+	return &UserHandlerWithStats{
+		UserHandler: NewUserHandler(userRepo, followRepo),
+		ratingRepo:  ratingRepo,
+	}
+}
+
+func (h *UserHandlerWithStats) GetYearStats(w http.ResponseWriter, r *http.Request) {
+	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(parts) < 6 {
+		http.Error(w, "Invalid URL", http.StatusBadRequest)
+		return
+	}
+	userID, err := strconv.Atoi(parts[2])
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+	year, err := strconv.Atoi(parts[5])
+	if err != nil {
+		http.Error(w, "Invalid year", http.StatusBadRequest)
+		return
+	}
+	stats, err := h.ratingRepo.GetYearStats(userID, year)
+	if err != nil {
+		log.Printf("GetYearStats error: %v", err)
+		http.Error(w, "Failed to get stats", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(stats)
 }

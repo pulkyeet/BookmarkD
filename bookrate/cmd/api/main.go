@@ -45,18 +45,26 @@ func main() {
 	ratingHandler := handlers.NewRatingHandler(ratingRepo)
 	bookHandler := handlers.NewBookHandler(bookRepo)
 	authHandler := handlers.NewAuthHandler(userRepo)
+	authHandler.SetOAuthConfig(
+		os.Getenv("GOOGLE_CLIENT_ID"),
+		os.Getenv("GOOGLE_CLIENT_SECRET"),
+		os.Getenv("GOOGLE_REDIRECT_URL"),
+	)
 	feedHandler := handlers.NewFeedHandler(ratingRepo)
-	userHandler := handlers.NewUserHandler(userRepo, followRepo)
+	userHandler := handlers.NewUserHandlerWithStats(userRepo, followRepo, ratingRepo)
 	commentHandler := handlers.NewCommentHandler(commentRepo)
 	genreHandler := handlers.NewGenreHandler(genreRepo)
 	listHandler := handlers.NewListHandler(listRepo)
+	importHandler := handlers.NewImportHandler(bookRepo, ratingRepo)
 	embedHandler := handlers.NewEmbedHandler(ratingRepo, listRepo, userRepo)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", healthHandler)
-	mux.HandleFunc("/api/auth/signup", authHandler.Signup)
-	mux.HandleFunc("/api/auth/login", authHandler.Login)
-	// Protected route
+	mux.HandleFunc("/api/auth/signup", middleware.RateLimit(authHandler.Signup))
+	mux.HandleFunc("/api/auth/login", middleware.RateLimit(authHandler.Login))
+	mux.HandleFunc("/api/auth/google", middleware.RateLimit(authHandler.GoogleLogin))
+	mux.HandleFunc("/api/auth/google/callback", middleware.RateLimit(authHandler.GoogleCallback))
+	mux.HandleFunc("/api/auth/google/finalize", middleware.RateLimit(authHandler.FinaliseOAuth))
 	mux.HandleFunc("/api/profile", middleware.AuthMiddleware(profileHandler))
 	mux.HandleFunc("/api/books", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
@@ -94,7 +102,6 @@ func main() {
 		query := r.URL.Query()
 		query.Set("book_id", bookID)
 		r.URL.RawQuery = query.Encode()
-
 		switch r.Method {
 		case http.MethodPost:
 			middleware.AuthMiddleware(ratingHandler.CreateRating)(w, r)
@@ -213,10 +220,11 @@ func main() {
 	mux.HandleFunc("/api/users/me/bookmarked-lists", middleware.AuthMiddleware(listHandler.GetBookmarkedLists))
 	mux.HandleFunc("/api/lists/popular", listHandler.GetPopularLists)
 	mux.HandleFunc("/api/users/{id}/lists", listHandler.GetUserLists)
+	mux.HandleFunc("/api/users/{id}/stats/year/{year}", userHandler.GetYearStats)
 	mux.HandleFunc("/api/genres", genreHandler.GetAll)
 	mux.HandleFunc("/api/embed/users/{id}/books", embedHandler.GetUserBooks)
 	mux.HandleFunc("/api/embed/lists/{id}", embedHandler.GetListBooks)
-
+	mux.HandleFunc("/api/import/goodreads", middleware.AuthMiddleware(importHandler.ImportGoodreads))
 	fs := http.FileServer(http.Dir("./static"))
 	mux.Handle("/", fs)
 

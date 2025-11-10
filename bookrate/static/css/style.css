@@ -245,3 +245,75 @@ body {
 .logo-placeholder:hover {
     transform: scale(1.1) rotate(5deg);
 }
+
+/* Light Mode */
+body.light-mode {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    color: #1e293b;
+}
+
+.light-mode .glass-nav {
+    background: rgba(255, 255, 255, 0.8);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .auth-card,
+.light-mode .book-card,
+.light-mode .review-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #1e293b;
+}
+
+.light-mode .input-field {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #1e293b;
+}
+
+.light-mode .input-field::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+.light-mode .btn-secondary {
+    background: rgba(0, 0, 0, 0.1);
+    color: #1e293b;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.light-mode .text-gray-400 {
+    color: #64748b !important;
+}
+
+.light-mode .text-gray-500 {
+    color: #94a3b8 !important;
+}
+
+/* Dark mode toggle button */
+.theme-toggle {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    transition: transform 0.2s;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+}
+
+.theme-toggle svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: white;
+}

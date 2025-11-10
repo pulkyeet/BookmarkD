@@ -23,6 +23,11 @@ func (h *FeedHandler) GetFeed(w http.ResponseWriter, r *http.Request) {
 		userID = &claims.UserID
 	}
 
+	feedType := r.URL.Query().Get("type")
+	if feedType == "" {
+		feedType = "all"
+	}
+
 	limit := 20
 	offset := 0
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
@@ -36,7 +41,7 @@ func (h *FeedHandler) GetFeed(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	items, err := h.ratingRepo.GetFeed(userID, limit, offset)
+	items, err := h.ratingRepo.GetFeedByType(userID, feedType, limit, offset)
 	if err != nil {
 		log.Printf("Error getting feed: %v", err)
 		http.Error(w, "Failed to get feed", http.StatusInternalServerError)

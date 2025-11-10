@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/pulkyeet/bookrate/internal/models"
 )
 
@@ -50,7 +51,7 @@ RETURNING id, user_id, book_id, rating, review, status, created_at, updated_at`
 // Get all ratings for a book with stats
 func (r *RatingRepository) GetByBookID(bookID int, userID *int, sortBy string) (*models.BookRatingStats, error) {
 	statsQuery := `
-SELECT 
+SELECT
 	COALESCE(AVG(rating), 0) AS average_rating,
 	COUNT(*) as total
 FROM ratings
@@ -220,7 +221,7 @@ WHERE user_id = $1 AND book_id = $2`
 	return nil
 }
 
-func (r *RatingRepository) GetFeed(requestingUserID *int, limit, offset int) ([]models.FeedItem, error) {
+func (r *RatingRepository) GetFeedByType(requestingUserID *int, feedType string, limit, offset int) ([]models.FeedItem, error) {
 	query := `
     SELECT 
         r.id, r.user_id, r.book_id, r.rating, r.review, r.status, r.created_at, r.updated_at,
@@ -244,10 +245,11 @@ func (r *RatingRepository) GetFeed(requestingUserID *int, limit, offset int) ([]
 	args := []interface{}{}
 	argCount := 1
 
-	if requestingUserID != nil {
+	// Apply following filter only if feedType is "following" AND user is logged in
+	if feedType == "following" && requestingUserID != nil {
+		query += ` WHERE r.user_id IN (SELECT following_id FROM follows WHERE follower_id = $` + fmt.Sprintf("%d", argCount) + `)`
 		args = append(args, *requestingUserID)
 		argCount++
-		query += ` WHERE r.user_id IN (SELECT following_id FROM follows WHERE follower_id = $1)`
 	}
 
 	query += ` GROUP BY r.id, r.user_id, r.book_id, r.rating, r.review, r.status, r.created_at, r.updated_at, u.username, b.title, b.author, b.cover_url`
@@ -296,6 +298,11 @@ func (r *RatingRepository) GetFeed(requestingUserID *int, limit, offset int) ([]
 		items = append(items, item)
 	}
 	return items, nil
+}
+
+// Keep old GetFeed for backward compatibility if needed elsewhere
+func (r *RatingRepository) GetFeed(requestingUserID *int, limit, offset int) ([]models.FeedItem, error) {
+	return r.GetFeedByType(requestingUserID, "all", limit, offset)
 }
 
 func (r *RatingRepository) GetByUserIDWithStatus(userID int, status string) ([]models.Rating, error) {
@@ -429,4 +436,82 @@ func (r *RatingRepository) GetTopRatedByUser(userID, limit int) ([]map[string]in
 		})
 	}
 	return books, nil
+}
+
+func (r *RatingRepository) GetYearStats(userID, year int) (*models.UserYearStats, error) {
+	stats := &models.UserYearStats{Year: year}
+	countQuery := `SELECT COUNT(DISTINCT book_id) AS books_read, COALESCE(AVG(rating), 0) AS avg_rating FROM ratings WHERE user_id = $1 AND EXTRACT (YEAR FROM created_at) = $2 AND rating > 0`
+	err := r.db.QueryRow(countQuery, userID, year).Scan(&stats.BooksRead, &stats.AverageRating)
+	if err != nil {
+		return nil, err
+	}
+	genresQuery := `SELECT g.name, COUNT(DISTINCT r.book_id) AS count FROM ratings r JOIN book_genres bg ON r.book_id = bg.book_id JOIN genres g ON bg.genre_id = g.id WHERE r.user_id = $1 AND EXTRACT(YEAR FROM r.created_at) = $2 AND r.rating > 0 GROUP BY g.name ORDER BY count DESC LIMIT 5`
+	rows, err := r.db.Query(genresQuery, userID, year)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	stats.TopGenres = []models.GenreCount{}
+	for rows.Next() {
+		var gc models.GenreCount
+		if err := rows.Scan(&gc.Genre, &gc.Count); err != nil {
+			return nil, err
+		}
+		stats.TopGenres = append(stats.TopGenres, gc)
+	}
+	authorsQuery := `SELECT b.author, COUNT(DISTINCT r.book_id) AS count FROM ratings r JOIN books b ON r.book_id = b.id WHERE r.user_id = $1 AND EXTRACT(YEAR FROM r.created_at) = $2 AND r.rating > 0 GROUP BY b.author ORDER BY count DESC LIMIT 5`
+	rows, err = r.db.Query(authorsQuery, userID, year)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	stats.FavouriteAuthors = []models.AuthorCount{}
+	for rows.Next() {
+		var ac models.AuthorCount
+		if err := rows.Scan(&ac.Author, &ac.Count); err != nil {
+			return nil, err
+		}
+		stats.FavouriteAuthors = append(stats.FavouriteAuthors, ac)
+	}
+	monthlyQuery := `SELECT EXTRACT(MONTH FROM created_at)::int AS month, COUNT (DISTINCT book_id) AS count FROM ratings WHERE user_id = $1 AND EXTRACT(YEAR FROM created_at) = $2 AND rating > 0 GROUP BY month ORDER BY month`
+	rows, err = r.db.Query(monthlyQuery, userID, year)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	stats.MonthlyActivity = []models.MonthlyBookCount{}
+	for rows.Next() {
+		var mc models.MonthlyBookCount
+		if err := rows.Scan(&mc.Month, &mc.Count); err != nil {
+			return nil, err
+		}
+		stats.MonthlyActivity = append(stats.MonthlyActivity, mc)
+	}
+	streakQuery := `
+			WITH daily_reads AS (
+				SELECT DISTINCT DATE(created_at) as read_date
+				FROM ratings
+				WHERE user_id = $1
+					AND EXTRACT(YEAR FROM created_at) = $2
+					AND rating > 0
+				ORDER BY read_date
+			),
+			streaks AS (
+				SELECT
+					read_date,
+					read_date - (ROW_NUMBER() OVER (ORDER BY read_date))::int AS streak_group
+				FROM daily_reads
+			)
+			SELECT COALESCE(MAX(streak_length), 0) as max_streak
+			FROM (
+				SELECT COUNT(*) as streak_length
+				FROM streaks
+				GROUP BY streak_group
+			) sub
+		`
+	err = r.db.QueryRow(streakQuery, userID, year).Scan(&stats.ReadingStreak)
+	if err != nil {
+		return nil, err
+	}
+	return stats, nil
 }

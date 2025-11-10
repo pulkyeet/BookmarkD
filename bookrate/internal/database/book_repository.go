@@ -532,3 +532,25 @@ func nullInt(i int) interface{} {
 	}
 	return i
 }
+
+func (r *BookRepository) FindByTitleAuthor(title, author string) (*models.Book, error) {
+	query := `SELECT id, title, author, isbn, description, published_year, cover_url, created_at, updated_at FROM books WHERE LOWER(title) = LOWER($1) AND LOWER(author) = LOWER($2) LIMIT 1`
+	book := &models.Book{}
+	var isbnNull, descNull, coverNull sql.NullString
+	var yearNull sql.NullInt64
+	
+	err := r.db.QueryRow(query, title, author).Scan(&book.ID, &book.Title, &book.Author, &isbnNull, &descNull, &yearNull, &coverNull, &book.CreatedAt, &book.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+	book.CoverURL = coverNull.String
+	book.Description = descNull.String
+	book.ISBN = isbnNull.String
+	if yearNull.Valid {
+		book.PublishedYear = int(yearNull.Int64)
+	}
+	return book, nil
+}

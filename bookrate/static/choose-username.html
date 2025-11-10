@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Username - BookmarkD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-900 text-gray-100">
+<nav class="glass-nav fixed w-full z-50 top-0">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <a href="index.html" class="text-2xl font-bold gradient-text">BookmarkD</a>
+    </div>
+</nav>
+
+<main class="pt-32 min-h-screen flex items-center justify-center px-6">
+    <div class="auth-card max-w-md w-full">
+        <h1 class="text-3xl font-bold mb-2 text-center gradient-text">Choose Your Username</h1>
+        <p class="text-gray-400 text-center mb-2">Welcome to BookmarkD!</p>
+        <p class="text-sm text-blue-400 text-center mb-8" id="email"></p>
+
+        <form id="usernameForm" class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium mb-2">Username</label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    class="input-field" 
+                    placeholder="Choose a username"
+                    minlength="3"
+                    required
+                >
+                <p class="text-xs text-gray-500 mt-2">At least 3 characters, letters and numbers only</p>
+            </div>
+
+            <div id="errorMessage" class="hidden p-3 bg-red-500/10 border border-red-500 rounded-lg text-red-400 text-sm"></div>
+
+            <button type="submit" class="btn-primary w-full">
+                Continue
+            </button>
+        </form>
+    </div>
+</main>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const pendingToken = urlParams.get('pending');
+    const email = urlParams.get('email');
+
+    if (!pendingToken) {
+        window.location.href = '/login.html';
+    }
+
+    document.getElementById('email').textContent = email;
+
+    document.getElementById('usernameForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById('username').value.trim();
+        const errorDiv = document.getElementById('errorMessage');
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+
+        // Validate username format
+        if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+            errorDiv.textContent = 'Username can only contain letters, numbers, and underscores';
+            errorDiv.classList.remove('hidden');
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Creating account...';
+        errorDiv.classList.add('hidden');
+
+        try {
+            const response = await fetch('/api/auth/google/finalize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pending_token: pendingToken,
+                    username: username
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                window.location.href = '/feed.html';
+            } else {
+                const error = await response.text();
+                errorDiv.textContent = error;
+                errorDiv.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Continue';
+            }
+        } catch (err) {
+            errorDiv.textContent = 'An error occurred. Please try again.';
+            errorDiv.classList.remove('hidden');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Continue';
+        }
+    });
+</script>
+</body>
+</html>

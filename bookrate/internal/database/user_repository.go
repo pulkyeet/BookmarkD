@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+
 	"github.com/lib/pq"
 	"github.com/pulkyeet/bookrate/internal/models"
 )
@@ -48,16 +49,21 @@ func (r *UserRepository) Create(email, username, passwordHash string) (*models.U
 
 func (r *UserRepository) GetByEmail(email string) (*models.User, error) {
 	query := `
-SELECT id, email, username, password_hash, created_at, updated_at
-FROM users
-WHERE email = $1`
+		SELECT id, email, username, password_hash, google_id, created_at, updated_at
+		FROM users
+		WHERE email = $1
+	`
 
 	user := &models.User{}
+	var passwordNull sql.NullString
+	var googleIDNull sql.NullString
+	
 	err := r.db.QueryRow(query, email).Scan(
 		&user.ID,
 		&user.Email,
 		&user.Username,
-		&user.PasswordHash,
+		&passwordNull,
+		&googleIDNull,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -67,6 +73,12 @@ WHERE email = $1`
 	if err != nil {
 		return nil, err
 	}
+	
+	user.PasswordHash = passwordNull.String
+	if googleIDNull.Valid {
+		user.GoogleID = &googleIDNull.String
+	}
+	
 	return user, nil
 }
 
@@ -85,7 +97,7 @@ WHERE id = $1`
 
 func (r *UserRepository) GetProfile(userID int, viewerID *int) (*models.UserProfile, error) {
 	query := `
-    SELECT 
+    SELECT
         u.id, u.email, u.username, u.created_at, u.updated_at,
         COUNT(DISTINCT r.id) as total_books,
         COALESCE(AVG(r.rating), 0) as avg_rating,
@@ -125,4 +137,71 @@ func (r *UserRepository) GetProfile(userID int, viewerID *int) (*models.UserProf
 	}
 
 	return profile, nil
+}
+
+func (r *UserRepository) GetByGoogleID(googleID string) (*models.User, error) {
+	query := `
+		SELECT id, email, username, password_hash, google_id, created_at, updated_at
+		FROM users
+		WHERE google_id = $1
+	`
+	user := &models.User{}
+	var passwordNull sql.NullString
+	var googleIDStr sql.NullString
+	
+	err := r.db.QueryRow(query, googleID).Scan(
+		&user.ID,
+		&user.Email,
+		&user.Username,
+		&passwordNull,
+		&googleIDStr,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, sql.ErrNoRows
+	}
+	if err != nil {
+		return nil, err
+	}
+	
+	user.PasswordHash = passwordNull.String
+	if googleIDStr.Valid {
+		user.GoogleID = &googleIDStr.String
+	}
+	
+	return user, nil
+}
+
+func (r *UserRepository) CreateWithGoogle(email, username, googleID string) (*models.User, error) {
+	query := `INSERT INTO users (email, username, google_id) VALUES ($1, $2, $3) RETURNING id, email, username, google_id, created_at, updated_at`
+	user := &models.User{}
+	err := r.db.QueryRow(query, email, username, googleID).Scan(
+		&user.ID,
+		&user.Email,
+		&user.Username,
+		&user.GoogleID,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			if pqErr.Code == "23505" {
+				if pqErr.Constraint == "users_email_key" {
+					return nil, models.ErrEmailExists
+				}
+				if pqErr.Constraint == "users_username_key" {
+					return nil, models.ErrUsernameExists
+				}
+			}
+		}
+		return nil, err
+	}
+	return user, nil
+}
+
+func (r *UserRepository) LinkGoogleAccount(userID int, googleID string) error {
+	query := `UPDATE users SET google_id = $1 WHERE id = $2`
+	_, err := r.db.Exec(query, googleID, userID)
+	return err
 }

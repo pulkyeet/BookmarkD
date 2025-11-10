@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Stats - BookmarkD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-900 text-gray-100">
+<nav class="glass-nav fixed w-full z-50 top-0">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <a href="feed.html" class="text-2xl font-bold gradient-text">BookmarkD</a>
+        <div class="space-x-4">
+            <a href="books.html" class="hover:text-blue-400 transition">Browse</a>
+            <a href="feed.html" class="hover:text-blue-400 transition">Feed</a>
+            <a href="profile.html" class="hover:text-blue-400 transition">Profile</a>
+            <a href="import.html" class="hover:text-blue-400 transition">Import</a>
+            <a href="stats.html" class="text-blue-400">Stats</a>
+        </div>
+    </div>
+</nav>
+
+<main class="pt-24 pb-12">
+    <div class="container mx-auto px-6 max-w-6xl">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-4xl font-bold gradient-text">Your Year in Books</h1>
+            <select id="yearSelector" class="input-field w-32">
+                <!-- Will be populated by JS -->
+            </select>
+        </div>
+
+        <div id="loading" class="text-center py-12">
+            <div class="spinner"></div>
+        </div>
+
+        <div id="statsContent" class="hidden">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="auth-card text-center">
+                    <p class="text-gray-400 text-sm mb-2">Books Read</p>
+                    <p class="text-4xl font-bold gradient-text" id="booksRead">0</p>
+                </div>
+                <div class="auth-card text-center">
+                    <p class="text-gray-400 text-sm mb-2">Average Rating</p>
+                    <p class="text-4xl font-bold gradient-text" id="avgRating">0.0</p>
+                </div>
+                <div class="auth-card text-center">
+                    <p class="text-gray-400 text-sm mb-2">Reading Streak</p>
+                    <p class="text-4xl font-bold gradient-text"><span id="streak">0</span> days</p>
+                </div>
+                <div class="auth-card text-center">
+                    <p class="text-gray-400 text-sm mb-2">Top Genre</p>
+                    <p class="text-xl font-bold text-blue-400" id="topGenre">-</p>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Monthly Activity -->
+                <div class="auth-card">
+                    <h3 class="text-xl font-bold mb-4">Monthly Activity</h3>
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+
+                <!-- Top Genres -->
+                <div class="auth-card">
+                    <h3 class="text-xl font-bold mb-4">Top Genres</h3>
+                    <canvas id="genresChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Favorite Authors -->
+            <div class="auth-card">
+                <h3 class="text-xl font-bold mb-4">Favorite Authors</h3>
+                <div id="authorsList" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <div id="noData" class="hidden text-center py-12">
+            <p class="text-gray-400 mb-4">No reading activity for this year yet.</p>
+            <a href="books.html" class="btn-primary">Start Rating Books</a>
+        </div>
+    </div>
+</main>
+
+<script type="module">
+    import { api, isLoggedIn, getCurrentUserId } from './js/api.js';
+
+    if (!isLoggedIn()) {
+        window.location.href = 'login.html';
+    }
+
+    const currentYear = new Date().getFullYear();
+    const userId = getCurrentUserId();
+
+    // Populate year selector
+    const yearSelector = document.getElementById('yearSelector');
+    for (let year = currentYear; year >= 2020; year--) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelector.appendChild(option);
+    }
+
+    let monthlyChart, genresChart;
+
+    yearSelector.addEventListener('change', () => loadStats(yearSelector.value));
+
+    async function loadStats(year) {
+        const loading = document.getElementById('loading');
+        const content = document.getElementById('statsContent');
+        const noData = document.getElementById('noData');
+
+        loading.classList.remove('hidden');
+        content.classList.add('hidden');
+        noData.classList.add('hidden');
+
+        try {
+            const stats = await api.request(`/users/${userId}/stats/year/${year}`);
+
+            loading.classList.add('hidden');
+
+            if (stats.books_read === 0) {
+                noData.classList.remove('hidden');
+                return;
+            }
+
+            content.classList.remove('hidden');
+
+            // Update summary cards
+            document.getElementById('booksRead').textContent = stats.books_read;
+            document.getElementById('avgRating').textContent = stats.average_rating.toFixed(1);
+            document.getElementById('streak').textContent = stats.reading_streak;
+            document.getElementById('topGenre').textContent = 
+                stats.top_genres.length > 0 ? stats.top_genres[0].genre : '-';
+
+            // Monthly activity chart
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthlyData = Array(12).fill(0);
+            stats.monthly_activity.forEach(m => {
+                monthlyData[m.month - 1] = m.count;
+            });
+
+            if (monthlyChart) monthlyChart.destroy();
+            monthlyChart = new Chart(document.getElementById('monthlyChart'), {
+                type: 'bar',
+                data: {
+                    labels: monthNames,
+                    datasets: [{
+                        label: 'Books Read',
+                        data: monthlyData,
+                        backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            ticks: { color: '#9ca3af' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        x: { 
+                            ticks: { color: '#9ca3af' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // Top genres chart
+            if (genresChart) genresChart.destroy();
+            genresChart = new Chart(document.getElementById('genresChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: stats.top_genres.map(g => g.genre),
+                    datasets: [{
+                        data: stats.top_genres.map(g => g.count),
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(139, 92, 246, 0.8)',
+                            'rgba(236, 72, 153, 0.8)',
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(251, 146, 60, 0.8)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#9ca3af' }
+                        }
+                    }
+                }
+            });
+
+            // Favorite authors list
+            const authorsList = document.getElementById('authorsList');
+            if (stats.favorite_authors.length > 0) {
+                authorsList.innerHTML = stats.favorite_authors.map((author, idx) => `
+                    <div class="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl font-bold text-gray-600">#${idx + 1}</span>
+                            <p class="font-semibold">${author.author}</p>
+                        </div>
+                        <span class="text-gray-400">${author.count} book${author.count > 1 ? 's' : ''}</span>
+                    </div>
+                `).join('');
+            } else {
+                authorsList.innerHTML = '<p class="text-gray-400">No data yet</p>';
+            }
+
+        } catch (error) {
+            console.error('Error loading stats:', error);
+            loading.classList.add('hidden');
+            noData.classList.remove('hidden');
+        }
+    }
+
+    loadStats(currentYear);
+</script>
+</body>
+</html>
