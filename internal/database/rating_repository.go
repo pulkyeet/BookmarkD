@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/pulkyeet/bookrate/internal/models"
+	"github.com/pulkyeet/BookmarkD/internal/models"
 )
 
 type RatingRepository struct {

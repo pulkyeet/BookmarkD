@@ -10,8 +10,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/pulkyeet/bookrate/internal/database"
-	"github.com/pulkyeet/bookrate/internal/models"
+	"github.com/pulkyeet/BookmarkD/internal/database"
+	"github.com/pulkyeet/BookmarkD/internal/models"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )

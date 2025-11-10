@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"context"
-	"github.com/pulkyeet/bookrate/internal/models"
+	"github.com/pulkyeet/BookmarkD/internal/models"
 	"log"
 	"net/http"
 	"strings"

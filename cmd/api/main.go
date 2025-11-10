@@ -8,9 +8,9 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/pulkyeet/bookrate/internal/database"
-	"github.com/pulkyeet/bookrate/internal/handlers"
-	"github.com/pulkyeet/bookrate/internal/middleware"
+	"github.com/pulkyeet/BookmarkD/internal/database"
+	"github.com/pulkyeet/BookmarkD/internal/handlers"
+	"github.com/pulkyeet/BookmarkD/internal/middleware"
 )
 
 func main() {

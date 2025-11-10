@@ -2,7 +2,7 @@ package database
 
 import (
 	"database/sql"
-	"github.com/pulkyeet/bookrate/internal/models"
+	"github.com/pulkyeet/BookmarkD/internal/models"
 	"log"
 )
 

@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pulkyeet/bookrate/internal/database"
-	"github.com/pulkyeet/bookrate/internal/middleware"
-	"github.com/pulkyeet/bookrate/internal/models"
+	"github.com/pulkyeet/BookmarkD/internal/database"
+	"github.com/pulkyeet/BookmarkD/internal/middleware"
+	"github.com/pulkyeet/BookmarkD/internal/models"
 )
 
 type UserHandler struct {

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/lib/pq"
-	"github.com/pulkyeet/bookrate/internal/models"
+	"github.com/pulkyeet/BookmarkD/internal/models"
 )
 
 type UserRepository struct {

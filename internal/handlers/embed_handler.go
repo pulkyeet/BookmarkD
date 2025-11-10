@@ -3,7 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
-	"github.com/pulkyeet/bookrate/internal/database"
+	"github.com/pulkyeet/BookmarkD/internal/database"
 	"log"
 	"net/http"
 	"strconv"

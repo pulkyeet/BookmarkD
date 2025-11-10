@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
-	"github.com/pulkyeet/bookrate/internal/database"
-	"github.com/pulkyeet/bookrate/internal/models"
+	"github.com/pulkyeet/BookmarkD/internal/database"
+	"github.com/pulkyeet/BookmarkD/internal/models"
 	"log"
 	"net/http"
 	"strconv"

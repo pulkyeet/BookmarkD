@@ -1,4 +1,4 @@
-module github.com/pulkyeet/bookrate
+module github.com/pulkyeet/BookmarkD
 
 go 1.24.3
 
