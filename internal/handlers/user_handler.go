@@ -10,6 +10,7 @@ import (
 	"github.com/pulkyeet/BookmarkD/internal/database"
 	"github.com/pulkyeet/BookmarkD/internal/middleware"
 	"github.com/pulkyeet/BookmarkD/internal/models"
+	"github.com/pulkyeet/BookmarkD/internal/cache"
 )
 
 type UserHandler struct {
@@ -84,6 +85,7 @@ func (h *UserHandler) Follow(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to follow user", http.StatusInternalServerError)
 		return
 	}
+	cache.InvalidateUserCache(strconv.Itoa(claims.UserID))
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Follow successful!"})
 }
@@ -110,6 +112,7 @@ func (h *UserHandler) Unfollow(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to unfollow user", http.StatusInternalServerError)
 		return
 	}
+	cache.InvalidateUserCache(strconv.Itoa(claims.UserID))
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Unfollow successful!"})
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/pulkyeet/BookmarkD/internal/database"
 	"github.com/pulkyeet/BookmarkD/internal/middleware"
 	"log"
+	"github.com/pulkyeet/BookmarkD/internal/cache"
 	"net/http"
 	"strconv"
 )
@@ -44,6 +45,7 @@ func (h *ListHandler) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to create list", http.StatusInternalServerError)
 		return
 	}
+	cache.Delete(cache.GenerateKey("/api/users/" + strconv.Itoa(claims.UserID) + "/lists"))
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(list)
@@ -123,6 +125,7 @@ func (h *ListHandler) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to update list", http.StatusInternalServerError)
 		return
 	}
+	cache.Delete(cache.GenerateKey("/api/lists/" + strconv.Itoa(listID)))
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(list)
 }
@@ -149,6 +152,8 @@ func (h *ListHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to delete list", http.StatusInternalServerError)
 		return
 	}
+	cache.Delete(cache.GenerateKey("/api/lists/" + strconv.Itoa(listID)))
+	cache.DeletePattern("cache:global:/api/lists/popular*")
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -204,6 +209,7 @@ func (h *ListHandler) AddBook(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to add book", http.StatusInternalServerError)
 		return
 	}
+	cache.Delete(cache.GenerateKey("/api/lists/" + strconv.Itoa(listID)))
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -249,6 +255,7 @@ func (h *ListHandler) RemoveBook(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to remove book from list", http.StatusInternalServerError)
 		return
 	}
+	cache.Delete(cache.GenerateKey("/api/lists/" + strconv.Itoa(listID)))
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -299,6 +306,7 @@ func (h *ListHandler) ReorderBooks(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to reorder books from list", http.StatusInternalServerError)
 		return
 	}
+	cache.Delete(cache.GenerateKey("/api/lists/" + strconv.Itoa(listID)))
 	w.WriteHeader(http.StatusNoContent)
 }
 

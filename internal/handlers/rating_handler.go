@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"github.com/pulkyeet/BookmarkD/internal/cache"
 )
 
 type RatingHandler struct {
@@ -88,6 +89,8 @@ func (h *RatingHandler) CreateRating(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to create rating", http.StatusInternalServerError)
 		return
 	}
+	cache.InvalidateUserCache(strconv.Itoa(userID))
+	cache.InvalidateBookCache(strconv.Itoa(bookID))
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(rating)
 }
@@ -166,6 +169,8 @@ func (h *RatingHandler) DeleteRating(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to delete rating", http.StatusInternalServerError)
 		return
 	}
+	cache.InvalidateUserCache(strconv.Itoa(userID))
+	cache.InvalidateBookCache(strconv.Itoa(bookID))
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -275,6 +280,7 @@ func (h *RatingHandler) UpdateRating(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to update rating", http.StatusInternalServerError)
 		return
 	}
+	cache.InvalidateUserCache(strconv.Itoa(claims.UserID))
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(rating)
 }

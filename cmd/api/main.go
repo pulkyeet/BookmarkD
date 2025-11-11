@@ -6,8 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
-
+	"github.com/pulkyeet/BookmarkD/internal/analytics"
 	"github.com/joho/godotenv"
+	"github.com/pulkyeet/BookmarkD/internal/cache"
 	"github.com/pulkyeet/BookmarkD/internal/database"
 	"github.com/pulkyeet/BookmarkD/internal/handlers"
 	"github.com/pulkyeet/BookmarkD/internal/middleware"
@@ -18,7 +19,16 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found. Using environment variables")
 	}
-
+	
+	if err := cache.InitRedis(); err != nil {
+		log.Printf("Redis initialisation failed: %v. Continuing without cache.", err)
+	}
+	
+	if err := analytics.InitPosthog(); err != nil {
+		log.Printf("Posthog initialisation failed: %v. Continuing without analytics.", err)
+	}
+	defer analytics.Close()
+	
 	dbConfig := database.Config{
 		Host:     os.Getenv("DB_HOST"),
 		Port:     5433,
@@ -26,13 +36,12 @@ func main() {
 		Password: os.Getenv("DB_PASSWORD"),
 		DBName:   os.Getenv("DB_NAME"),
 	}
-
 	db, err := database.Connect(dbConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
-
+	
 	// Initialising repositories and handlers
 	userRepo := database.NewUserRepository(db)
 	bookRepo := database.NewBookRepository(db)
@@ -41,7 +50,7 @@ func main() {
 	commentRepo := database.NewCommentRepository(db)
 	genreRepo := database.NewGenreRepository(db)
 	listRepo := database.NewListRepository(db)
-
+	
 	ratingHandler := handlers.NewRatingHandler(ratingRepo)
 	bookHandler := handlers.NewBookHandler(bookRepo)
 	authHandler := handlers.NewAuthHandler(userRepo)
@@ -67,24 +76,24 @@ func main() {
 	mux.HandleFunc("/api/auth/google/finalize", middleware.RateLimit(authHandler.FinaliseOAuth))
 	mux.HandleFunc("/api/profile", middleware.AuthMiddleware(profileHandler))
 	mux.HandleFunc("/api/books", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			bookHandler.List(w, r)
-		} else if r.Method == http.MethodPost {
-			middleware.AuthMiddleware(bookHandler.Create)(w, r)
-		} else {
-			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		}
+    if r.Method == http.MethodGet {
+        cache.CacheMiddleware(cache.TTLBooksList)(bookHandler.List)(w, r)
+    } else if r.Method == http.MethodPost {
+        middleware.AuthMiddleware(bookHandler.Create)(w, r)
+    } else {
+        http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+    }
 	})
 	mux.HandleFunc("/api/books/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			bookHandler.Get(w, r)
-		} else if r.Method == http.MethodPut || r.Method == http.MethodPatch {
-			middleware.AuthMiddleware(bookHandler.Update)(w, r)
-		} else if r.Method == http.MethodDelete {
-			middleware.AuthMiddleware(bookHandler.Delete)(w, r)
-		} else {
-			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		}
+    if r.Method == http.MethodGet {
+        cache.CacheMiddleware(cache.TTLBookDetails)(bookHandler.Get)(w, r)
+    } else if r.Method == http.MethodPut || r.Method == http.MethodPatch {
+        middleware.AuthMiddleware(bookHandler.Update)(w, r)
+    } else if r.Method == http.MethodDelete {
+        middleware.AuthMiddleware(bookHandler.Delete)(w, r)
+    } else {
+        http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+    }
 	})
 	mux.HandleFunc("/api/books/{id}/ratings/me", func(w http.ResponseWriter, r *http.Request) {
 		bookID := r.PathValue("id")
@@ -114,11 +123,11 @@ func main() {
 		}
 	})
 	mux.HandleFunc("/api/users/me/ratings", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			middleware.AuthMiddleware(ratingHandler.GetMyRatings)(w, r)
-		} else {
-			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		}
+    if r.Method == http.MethodGet {
+        middleware.AuthMiddleware(cache.CacheMiddleware(cache.TTLUserRatings)(ratingHandler.GetMyRatings))(w, r)
+    } else {
+        http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+    }
 	})
 	mux.HandleFunc("/api/ratings/{id}/like", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -167,9 +176,9 @@ func main() {
 	})
 	mux.HandleFunc("/api/users/{id}/followers", userHandler.GetFollowers)
 	mux.HandleFunc("/api/users/{id}/following", userHandler.GetFollowing)
-	mux.HandleFunc("/api/feed", middleware.OptionalAuthMiddleware(feedHandler.GetFeed))
-	mux.HandleFunc("/api/books/trending", bookHandler.GetTrending)
-	mux.HandleFunc("/api/books/popular", bookHandler.GetPopular)
+	mux.HandleFunc("/api/feed", cache.CacheMiddleware(cache.TTLUserFeed)(middleware.OptionalAuthMiddleware(feedHandler.GetFeed)))
+	mux.HandleFunc("/api/books/trending", cache.CacheMiddleware(cache.TTLTrending)(bookHandler.GetTrending))
+	mux.HandleFunc("/api/books/popular", cache.CacheMiddleware(cache.TTLPopular)(bookHandler.GetPopular))
 	mux.HandleFunc("/api/books/{id}/similar", bookHandler.GetSimilar)
 	mux.HandleFunc("/api/lists", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
@@ -218,10 +227,10 @@ func main() {
 		}
 	})
 	mux.HandleFunc("/api/users/me/bookmarked-lists", middleware.AuthMiddleware(listHandler.GetBookmarkedLists))
-	mux.HandleFunc("/api/lists/popular", listHandler.GetPopularLists)
-	mux.HandleFunc("/api/users/{id}/lists", listHandler.GetUserLists)
+	mux.HandleFunc("/api/lists/popular", cache.CacheMiddleware(cache.TTLPopular)(listHandler.GetPopularLists))
+	mux.HandleFunc("/api/users/{id}/lists", cache.CacheMiddleware(cache.TTLUserProfile)(listHandler.GetUserLists))
 	mux.HandleFunc("/api/users/{id}/stats/year/{year}", userHandler.GetYearStats)
-	mux.HandleFunc("/api/genres", genreHandler.GetAll)
+	mux.HandleFunc("/api/genres", cache.CacheMiddleware(cache.TTLGenres)(genreHandler.GetAll))
 	mux.HandleFunc("/api/embed/users/{id}/books", embedHandler.GetUserBooks)
 	mux.HandleFunc("/api/embed/lists/{id}", embedHandler.GetListBooks)
 	mux.HandleFunc("/api/import/goodreads", middleware.AuthMiddleware(importHandler.ImportGoodreads))

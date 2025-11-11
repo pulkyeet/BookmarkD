@@ -5,6 +5,7 @@ import (
 	"github.com/pulkyeet/BookmarkD/internal/database"
 	"github.com/pulkyeet/BookmarkD/internal/models"
 	"log"
+	"github.com/pulkyeet/BookmarkD/internal/cache"
 	"net/http"
 	"strconv"
 	"strings"
@@ -38,7 +39,7 @@ func (h *BookHandler) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-
+	cache.DeletePattern("cache:global:/api/books*")
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(book)
@@ -139,6 +140,7 @@ func (h *BookHandler) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
+	cache.InvalidateBookCache(strconv.Itoa(id))
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(book)
 }
@@ -168,6 +170,7 @@ func (h *BookHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
+	cache.InvalidateBookCache(strconv.Itoa(id))
 	w.WriteHeader(http.StatusNoContent)
 }
 
