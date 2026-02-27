@@ -1,72 +1,117 @@
 package cache
 
 import (
-	"time"
-	"os"
-	"fmt"
+	"bytes"
 	"context"
-	"github.com/redis/go-redis/v9"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"time"
 )
 
 var (
-	Client *redis.Client
-	ctx = context.Background()
+	restURL   string
+	restToken string
+	ctx       = context.Background()
 )
 
 const (
-	TTLTrending = 1 * time.Hour
-	TTLPopular = 1 * time.Hour
+	TTLTrending    = 1 * time.Hour
+	TTLPopular     = 1 * time.Hour
 	TTLBookDetails = 24 * time.Hour
-	TTLGenres = 24 * time.Hour
-	TTLUserFeed = 15 * time.Minute
+	TTLGenres      = 24 * time.Hour
+	TTLUserFeed    = 15 * time.Minute
 	TTLUserProfile = 30 * time.Minute
 	TTLUserRatings = 30 * time.Minute
-	TTLBooksList = 1 * time.Hour
+	TTLBooksList   = 1 * time.Hour
 )
 
 func InitRedis() error {
-	url := os.Getenv("UPSTASH_REDIS_REST_URL")
-	token := os.Getenv("UPSTASH_REDIS_REST_TOKEN")
-	if url == "" || token == "" {
+	restURL = os.Getenv("UPSTASH_REDIS_REST_URL")
+	restToken = os.Getenv("UPSTASH_REDIS_REST_TOKEN")
+	if restURL == "" || restToken == "" {
 		return fmt.Errorf("Upstash redis rest url/token missing")
 	}
-	opt, err := redis.ParseURL(url)
+	// Ping via REST
+	_, err := upstashCmd("PING")
 	if err != nil {
-		return fmt.Errorf("Failed to parse redis URL: %w", err)
-	}
-	opt.Password = token
-	Client = redis.NewClient(opt)
-	if err := Client.Ping(ctx).Err(); err != nil {
-		return fmt.Errorf("Failed to connect to redis: %w", err)
+		return fmt.Errorf("failed to ping Upstash: %w", err)
 	}
 	fmt.Println("Redis connected successfully")
 	return nil
 }
 
-func Get(key string) (string, error) {
-	val, err := Client.Get(ctx, key).Result()
-	if err == redis.Nil {
-		return "", nil
+// upstashCmd sends a command to Upstash REST API and returns the result field.
+func upstashCmd(args ...interface{}) (interface{}, error) {
+	body, _ := json.Marshal(args)
+	req, _ := http.NewRequest("POST", restURL, bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+restToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
 	}
-	return val, err
+	defer resp.Body.Close()
+
+	raw, _ := io.ReadAll(resp.Body)
+	var result struct {
+		Result interface{} `json:"result"`
+		Error  string      `json:"error"`
+	}
+	if err := json.Unmarshal(raw, &result); err != nil {
+		return nil, err
+	}
+	if result.Error != "" {
+		return nil, fmt.Errorf("upstash error: %s", result.Error)
+	}
+	return result.Result, nil
+}
+
+func Get(key string) (string, error) {
+	val, err := upstashCmd("GET", key)
+	if err != nil {
+		return "", err
+	}
+	if val == nil {
+		return "", nil // cache miss
+	}
+	return fmt.Sprintf("%v", val), nil
 }
 
 func Set(key, value string, ttl time.Duration) error {
-	return Client.Set(ctx, key, value, ttl).Err()
+	seconds := int(ttl.Seconds())
+	_, err := upstashCmd("SET", key, value, "EX", seconds)
+	return err
 }
 
 func Delete(key string) error {
-	return Client.Del(ctx, key).Err()
+	_, err := upstashCmd("DEL", key)
+	return err
 }
 
 func DeletePattern(pattern string) error {
-	iter := Client.Scan(ctx, 0, pattern, 0).Iterator()
-	for iter.Next(ctx) {
-		if err := Client.Del(ctx, iter.Val()).Err(); err != nil {
+	// SCAN + DEL via REST
+	val, err := upstashCmd("SCAN", 0, "MATCH", pattern, "COUNT", 100)
+	if err != nil {
+		return err
+	}
+	arr, ok := val.([]interface{})
+	if !ok || len(arr) < 2 {
+		return nil
+	}
+	keys, ok := arr[1].([]interface{})
+	if !ok {
+		return nil
+	}
+	for _, k := range keys {
+		if _, err := upstashCmd("DEL", fmt.Sprintf("%v", k)); err != nil {
 			return err
 		}
 	}
-	return iter.Err()
+	return nil
 }
 
 func GenerateKey(path string, userID ...string) string {
