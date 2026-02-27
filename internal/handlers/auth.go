@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"net/http"
 
 	"github.com/pulkyeet/BookmarkD/internal/database"
@@ -191,6 +192,12 @@ type GoogleUserInfo struct {
 }
 
 func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
+
+	siteBase := os.Getenv("SITE_BASE_URL")
+	if siteBase == "" {
+		siteBase = "http://localhost:8080"
+	}
+
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -245,7 +252,7 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		redirectURL := fmt.Sprintf("http://localhost:8080/auth-success.html?token=%s", jwtToken)
+		redirectURL := fmt.Sprintf("%s/auth-success.html?token=%s", siteBase, jwtToken)
 		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 		return
 	}
@@ -265,7 +272,7 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			redirectURL := fmt.Sprintf("http://localhost:8080/auth-success.html?token=%s", jwtToken)
+			redirectURL := fmt.Sprintf("%s/auth-success.html?token=%s", siteBase, jwtToken)
 			http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 			return
 		}
@@ -288,7 +295,7 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		redirectURL := fmt.Sprintf("http://localhost:8080/auth-success.html?token=%s", jwtToken)
+		redirectURL := fmt.Sprintf("%s/auth-success.html?token=%s", siteBase, jwtToken)
 		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 		return
 	}
@@ -302,7 +309,7 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	redirectURL := fmt.Sprintf("http://localhost:8080/choose-username.html?pending=%s&email=%s", pendingToken, googleUser.Email)
+	redirectURL := fmt.Sprintf("%s/choose-username.html?pending=%s&email=%s", siteBase, pendingToken, googleUser.Email)
 	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }
 

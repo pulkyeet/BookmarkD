@@ -1,8 +1,8 @@
-(function() {
+(function () {
     'use strict';
 
-    const API_BASE = 'http://localhost:8080/api';
-    const SITE_BASE = 'http://localhost:8080';
+    const API_BASE = 'https://bookmarkd.fly.dev/api';
+    const SITE_BASE = 'https://bookmarkd.fly.dev';
 
     // Find all embed containers
     const containers = document.querySelectorAll('[data-bookmarkd-embed]');

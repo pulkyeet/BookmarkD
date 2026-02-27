@@ -137,7 +137,7 @@
             formData.append('csv', file);
 
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:8080/api/import/goodreads', {
+            const response = await fetch('/api/import/goodreads', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`

@@ -1,5 +1,5 @@
-const API_BASE = 'http://localhost:8080/api';
-const SITE_BASE = 'http://localhost:8080';
+const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8080/api' : '/api';
+const SITE_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8080' : 'https://bookmarkd.fly.dev';
 
 function getAuthToken() {
     return localStorage.getItem('token');
