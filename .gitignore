@@ -1,0 +1,9 @@
+.env
+.env.*
+*.exe
+api
+server
+.DS_Store
+.idea/
+tmp/
+*.log
