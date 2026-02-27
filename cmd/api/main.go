@@ -29,14 +29,7 @@ func main() {
 	}
 	defer analytics.Close()
 	
-	dbConfig := database.Config{
-		Host:     os.Getenv("DB_HOST"),
-		Port:     5433,
-		User:     os.Getenv("DB_USER"),
-		Password: os.Getenv("DB_PASSWORD"),
-		DBName:   os.Getenv("DB_NAME"),
-	}
-	db, err := database.Connect(dbConfig)
+	db, err := database.ConnectFromEnv()
 	if err != nil {
 		log.Fatal(err)
 	}
