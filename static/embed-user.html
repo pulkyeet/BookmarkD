@@ -4,53 +4,242 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Embed</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            margin: 0;
-            padding: 16px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 20px;
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #09090b;
+            color: #f5f5f4;
+            -webkit-font-smoothing: antialiased;
         }
-        .bookmarkd-embed {
-            max-width: 100%;
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.4;
         }
+
+        .bookmarkd-embed { max-width: 100%; }
+
+        .embed-header {
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #25252b;
+        }
+
+        .embed-header h2 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.375rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin-bottom: 0.375rem;
+        }
+
+        .embed-credit {
+            font-size: 0.6875rem;
+            color: #63636e;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .embed-credit a {
+            color: #d4a574;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .embed-credit a:hover { color: #e2bb91; }
+
+        .grid-view {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        }
+
+        .list-view {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 1fr;
+        }
+
+        .minimal-view {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        }
+
         .book-card {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 8px;
-            padding: 12px;
-            transition: all 0.2s;
+            background: #131316;
+            border: 1px solid #25252b;
+            border-radius: 10px;
+            padding: 10px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            opacity: 0;
+            animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
+
         .book-card:hover {
-            border-color: #3b82f6;
-            transform: translateY(-2px);
+            border-color: rgba(212, 165, 116, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(212, 165, 116, 0.06);
         }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .book-card:nth-child(1) { animation-delay: 0.05s; }
+        .book-card:nth-child(2) { animation-delay: 0.1s; }
+        .book-card:nth-child(3) { animation-delay: 0.15s; }
+        .book-card:nth-child(4) { animation-delay: 0.2s; }
+        .book-card:nth-child(5) { animation-delay: 0.25s; }
+        .book-card:nth-child(6) { animation-delay: 0.3s; }
+        .book-card:nth-child(7) { animation-delay: 0.35s; }
+        .book-card:nth-child(8) { animation-delay: 0.4s; }
+        .book-card:nth-child(9) { animation-delay: 0.45s; }
+        .book-card:nth-child(10) { animation-delay: 0.5s; }
+
         .book-cover {
             width: 100%;
             aspect-ratio: 2/3;
             object-fit: cover;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #1a1a1f 0%, #25252b 100%);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .book-card h3 {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-bottom: 2px;
+        }
+
+        .book-author {
+            font-size: 0.6875rem;
+            color: #63636e;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .book-rating {
+            display: inline-flex;
+            align-items: center;
+            margin-top: 6px;
+            background: #d4a574;
+            color: #09090b;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            padding: 2px 7px;
             border-radius: 4px;
-            background: #334155;
+            letter-spacing: 0.02em;
         }
-        .rating-stars {
-            color: #fbbf24;
+
+        .book-card-list {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            align-items: center;
         }
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            font-size: 11px;
+
+        .book-card-list img {
+            width: 52px;
+            height: 78px;
+            flex-shrink: 0;
+            margin-bottom: 0;
             border-radius: 4px;
-            background: rgba(59, 130, 246, 0.1);
-            color: #60a5fa;
-            margin-top: 8px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #1a1a1f, #25252b);
         }
+
+        .book-card-list .book-info { flex: 1; min-width: 0; }
+        .book-card-list .book-info h3 { font-size: 0.875rem; }
+
+        .book-review-snippet {
+            font-size: 0.75rem;
+            color: #a8a8b3;
+            margin-top: 4px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .book-card-minimal {
+            padding: 0;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .book-card-minimal:hover {
+            transform: scale(1.04);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+            border: none;
+        }
+
+        .book-card-minimal img { margin-bottom: 0; border-radius: 8px; }
+
+        .embed-footer {
+            margin-top: 1.25rem;
+            padding-top: 1rem;
+            border-top: 1px solid #25252b;
+            text-align: center;
+        }
+
+        .embed-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.4rem 1rem;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            border-radius: 6px;
+            background: rgba(212, 165, 116, 0.08);
+            color: #d4a574;
+            text-decoration: none;
+            transition: all 0.25s;
+            letter-spacing: 0.02em;
+        }
+
+        .embed-badge:hover {
+            background: rgba(212, 165, 116, 0.15);
+            color: #e2bb91;
+        }
+
+        .loading-pulse {
+            text-align: center;
+            padding: 3rem 0;
+            color: #63636e;
+            font-size: 0.875rem;
+        }
+
+        .loading-pulse span { animation: pulse 1.5s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100">
+<body>
 <div class="bookmarkd-embed" id="embedContainer">
-    <div id="loading" class="text-center py-8">
-        <div class="animate-pulse text-gray-400">Loading...</div>
-    </div>
+    <div class="loading-pulse"><span>Loading books...</span></div>
 </div>
 
 <script>
@@ -63,80 +252,63 @@
         const style = params.get('style') || 'grid';
 
         if (!userId) {
-            document.getElementById('loading').innerHTML = '<p class="text-red-400">User ID required</p>';
+            document.getElementById('embedContainer').innerHTML = '<p style="color: #f87171; font-size: 0.875rem;">User ID required</p>';
             return;
         }
 
         try {
             const res = await fetch(`${API_BASE}/api/embed/users/${userId}/books?count=${count}`);
             if (!res.ok) throw new Error('Failed to load');
-
             const data = await res.json();
             renderEmbed(data, style);
         } catch (err) {
-            document.getElementById('loading').innerHTML = '<p class="text-red-400">Failed to load books</p>';
+            document.getElementById('embedContainer').innerHTML = '<p style="color: #f87171; font-size: 0.875rem;">Failed to load books</p>';
         }
     }
 
     function renderEmbed(data, style) {
         const container = document.getElementById('embedContainer');
-
-        let gridClass = 'grid gap-4';
-        if (style === 'grid') {
-            gridClass += ' grid-cols-2 sm:grid-cols-3 md:grid-cols-5';
-        } else if (style === 'list') {
-            gridClass += ' grid-cols-1';
-        } else {
-            gridClass += ' grid-cols-3 sm:grid-cols-5';
-        }
+        let layoutClass = style === 'list' ? 'list-view' : style === 'minimal' ? 'minimal-view' : 'grid-view';
 
         const booksHTML = data.books.map(book => {
-            const stars = '★'.repeat(book.rating) + '☆'.repeat(10 - book.rating);
-
             if (style === 'list') {
                 return `
-                        <div class="book-card flex gap-3">
-                            <img src="${book.cover_url || '/placeholder.jpg'}" alt="${book.title}" class="w-16 h-24 object-cover rounded">
-                            <div class="flex-1 min-w-0">
-                                <h3 class="font-semibold text-sm truncate">${book.title}</h3>
-                                <p class="text-xs text-gray-400 truncate">${book.author}</p>
-                                <div class="rating-stars text-xs mt-1">${stars}</div>
-                                ${book.review_snippet ? `<p class="text-xs text-gray-300 mt-2 line-clamp-2">${book.review_snippet}</p>` : ''}
-                            </div>
+                    <a href="${API_BASE}/book-detail.html?id=${book.book_id}" target="_blank" class="book-card book-card-list">
+                        <img src="${book.cover_url || ''}" alt="${book.title}">
+                        <div class="book-info">
+                            <h3>${book.title}</h3>
+                            <p class="book-author">${book.author}</p>
+                            ${book.rating > 0 ? `<span class="book-rating">${book.rating}/10</span>` : ''}
+                            ${book.review_snippet ? `<p class="book-review-snippet">${book.review_snippet}</p>` : ''}
                         </div>
-                    `;
+                    </a>`;
             } else if (style === 'minimal') {
                 return `
-                        <div class="book-card">
-                            <img src="${book.cover_url || '/placeholder.jpg'}" alt="${book.title}" class="book-cover">
-                        </div>
-                    `;
+                    <a href="${API_BASE}/book-detail.html?id=${book.book_id}" target="_blank" class="book-card book-card-minimal">
+                        <img src="${book.cover_url || ''}" alt="${book.title}" class="book-cover">
+                    </a>`;
             } else {
                 return `
-                        <div class="book-card">
-                            <img src="${book.cover_url || '/placeholder.jpg'}" alt="${book.title}" class="book-cover mb-2">
-                            <h3 class="font-semibold text-xs truncate">${book.title}</h3>
-                            <p class="text-xs text-gray-400 truncate">${book.author}</p>
-                            <div class="rating-stars text-xs mt-1">${stars}</div>
-                        </div>
-                    `;
+                    <a href="${API_BASE}/book-detail.html?id=${book.book_id}" target="_blank" class="book-card">
+                        <img src="${book.cover_url || ''}" alt="${book.title}" class="book-cover">
+                        <h3>${book.title}</h3>
+                        <p class="book-author">${book.author}</p>
+                        ${book.rating > 0 ? `<span class="book-rating">${book.rating}/10</span>` : ''}
+                    </a>`;
             }
         }).join('');
 
         container.innerHTML = `
-                <div class="mb-4">
-                    <h2 class="text-lg font-bold mb-1">${data.username}'s Top Books</h2>
-                    <div class="text-xs text-gray-400">Powered by BookmarkD</div>
-                </div>
-                <div class="${gridClass}">
-                    ${booksHTML}
-                </div>
-                <div class="mt-4 text-center">
-                    <a href="${API_BASE}/user-profile.html?id=${data.user_id}" target="_blank" class="badge">
-                        View full profile on BookmarkD →
-                    </a>
-                </div>
-            `;
+            <div class="embed-header">
+                <h2>${data.username}'s Top Books</h2>
+                <div class="embed-credit">Curated on <a href="${API_BASE}" target="_blank">BookmarkD</a></div>
+            </div>
+            <div class="${layoutClass}">${booksHTML}</div>
+            <div class="embed-footer">
+                <a href="${API_BASE}/user-profile.html?id=${data.user_id}" target="_blank" class="embed-badge">
+                    View full profile &rarr;
+                </a>
+            </div>`;
     }
 
     loadEmbed();
