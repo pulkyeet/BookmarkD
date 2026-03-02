@@ -8,26 +8,28 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-gray-900 text-gray-100">
+<body>
+
 <nav class="glass-nav fixed w-full z-50 top-0">
-    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-        <a href="feed.html" class="text-2xl font-bold gradient-text">BookmarkD</a>
-        <div class="space-x-4">
-            <a href="books.html" class="hover:text-blue-400 transition">Browse</a>
-            <a href="feed.html" class="hover:text-blue-400 transition">Feed</a>
-            <a href="profile.html" class="hover:text-blue-400 transition">Profile</a>
-            <a href="import.html" class="hover:text-blue-400 transition">Import</a>
-            <a href="stats.html" class="text-blue-400">Stats</a>
+    <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+        <a href="index.html" class="flex items-center gap-2">
+            <span class="logo-text">BookmarkD</span>
+        </a>
+        <div class="flex items-center gap-6">
+            <a href="books.html" class="nav-link">Browse</a>
+            <a href="feed.html" class="nav-link">Feed</a>
+            <a href="profile.html" class="nav-link">Profile</a>
+            <a href="import.html" class="nav-link">Import</a>
+            <a href="stats.html" class="nav-link active">Stats</a>
         </div>
     </div>
 </nav>
 
 <main class="pt-24 pb-12">
-    <div class="container mx-auto px-6 max-w-6xl">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-4xl font-bold gradient-text">Your Year in Books</h1>
-            <select id="yearSelector" class="input-field w-32">
-                <!-- Will be populated by JS -->
+    <div class="max-w-6xl mx-auto px-6">
+        <div class="flex justify-between items-center mb-8 animate-fade-in">
+            <h1 class="text-4xl font-bold gradient-text" style="font-family: var(--font-display);">Your Year in Books</h1>
+            <select id="yearSelector" class="input-field" style="width: 8rem;">
             </select>
         </div>
 
@@ -37,49 +39,46 @@
 
         <div id="statsContent" class="hidden">
             <!-- Summary Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8 stagger-in">
                 <div class="auth-card text-center">
-                    <p class="text-gray-400 text-sm mb-2">Books Read</p>
+                    <p class="text-sm mb-2" style="color: var(--text-muted);">Books Read</p>
                     <p class="text-4xl font-bold gradient-text" id="booksRead">0</p>
                 </div>
                 <div class="auth-card text-center">
-                    <p class="text-gray-400 text-sm mb-2">Average Rating</p>
+                    <p class="text-sm mb-2" style="color: var(--text-muted);">Average Rating</p>
                     <p class="text-4xl font-bold gradient-text" id="avgRating">0.0</p>
                 </div>
                 <div class="auth-card text-center">
-                    <p class="text-gray-400 text-sm mb-2">Reading Streak</p>
+                    <p class="text-sm mb-2" style="color: var(--text-muted);">Reading Streak</p>
                     <p class="text-4xl font-bold gradient-text"><span id="streak">0</span> days</p>
                 </div>
                 <div class="auth-card text-center">
-                    <p class="text-gray-400 text-sm mb-2">Top Genre</p>
-                    <p class="text-xl font-bold text-blue-400" id="topGenre">-</p>
+                    <p class="text-sm mb-2" style="color: var(--text-muted);">Top Genre</p>
+                    <p class="text-xl font-bold" id="topGenre" style="color: var(--accent);">-</p>
                 </div>
             </div>
 
             <!-- Charts -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <!-- Monthly Activity -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
                 <div class="auth-card">
-                    <h3 class="text-xl font-bold mb-4">Monthly Activity</h3>
+                    <h3 class="text-xl font-bold mb-4" style="font-family: var(--font-display);">Monthly Activity</h3>
                     <canvas id="monthlyChart"></canvas>
                 </div>
-
-                <!-- Top Genres -->
                 <div class="auth-card">
-                    <h3 class="text-xl font-bold mb-4">Top Genres</h3>
+                    <h3 class="text-xl font-bold mb-4" style="font-family: var(--font-display);">Top Genres</h3>
                     <canvas id="genresChart"></canvas>
                 </div>
             </div>
 
             <!-- Favorite Authors -->
             <div class="auth-card">
-                <h3 class="text-xl font-bold mb-4">Favorite Authors</h3>
+                <h3 class="text-xl font-bold mb-4" style="font-family: var(--font-display);">Favorite Authors</h3>
                 <div id="authorsList" class="space-y-3"></div>
             </div>
         </div>
 
         <div id="noData" class="hidden text-center py-12">
-            <p class="text-gray-400 mb-4">No reading activity for this year yet.</p>
+            <p class="mb-4" style="color: var(--text-muted);">No reading activity for this year yet.</p>
             <a href="books.html" class="btn-primary">Start Rating Books</a>
         </div>
     </div>
@@ -95,7 +94,6 @@
     const currentYear = new Date().getFullYear();
     const userId = getCurrentUserId();
 
-    // Populate year selector
     const yearSelector = document.getElementById('yearSelector');
     for (let year = currentYear; year >= 2020; year--) {
         const option = document.createElement('option');
@@ -119,7 +117,6 @@
 
         try {
             const stats = await api.request(`/users/${userId}/stats/year/${year}`);
-
             loading.classList.add('hidden');
 
             if (stats.books_read === 0) {
@@ -129,15 +126,13 @@
 
             content.classList.remove('hidden');
 
-            // Update summary cards
             document.getElementById('booksRead').textContent = stats.books_read;
             document.getElementById('avgRating').textContent = stats.average_rating.toFixed(1);
             document.getElementById('streak').textContent = stats.reading_streak;
-            document.getElementById('topGenre').textContent = 
+            document.getElementById('topGenre').textContent =
                 stats.top_genres.length > 0 ? stats.top_genres[0].genre : '-';
 
-            // Monthly activity chart
-            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const monthlyData = Array(12).fill(0);
             stats.monthly_activity.forEach(m => {
@@ -152,9 +147,10 @@
                     datasets: [{
                         label: 'Books Read',
                         data: monthlyData,
-                        backgroundColor: 'rgba(59, 130, 246, 0.5)',
-                        borderColor: 'rgba(59, 130, 246, 1)',
-                        borderWidth: 2
+                        backgroundColor: 'rgba(212, 165, 116, 0.4)',
+                        borderColor: 'rgba(212, 165, 116, 0.9)',
+                        borderWidth: 2,
+                        borderRadius: 4
                     }]
                 },
                 options: {
@@ -162,20 +158,19 @@
                     maintainAspectRatio: true,
                     plugins: { legend: { display: false } },
                     scales: {
-                        y: { 
+                        y: {
                             beginAtZero: true,
-                            ticks: { color: '#9ca3af' },
-                            grid: { color: 'rgba(255,255,255,0.1)' }
+                            ticks: { color: '#63636e' },
+                            grid: { color: 'rgba(255,255,255,0.04)' }
                         },
-                        x: { 
-                            ticks: { color: '#9ca3af' },
+                        x: {
+                            ticks: { color: '#63636e' },
                             grid: { display: false }
                         }
                     }
                 }
             });
 
-            // Top genres chart
             if (genresChart) genresChart.destroy();
             genresChart = new Chart(document.getElementById('genresChart'), {
                 type: 'doughnut',
@@ -184,11 +179,11 @@
                     datasets: [{
                         data: stats.top_genres.map(g => g.count),
                         backgroundColor: [
-                            'rgba(59, 130, 246, 0.8)',
-                            'rgba(139, 92, 246, 0.8)',
-                            'rgba(236, 72, 153, 0.8)',
-                            'rgba(34, 197, 94, 0.8)',
-                            'rgba(251, 146, 60, 0.8)'
+                            'rgba(212, 165, 116, 0.8)',
+                            'rgba(167, 139, 250, 0.8)',
+                            'rgba(236, 72, 153, 0.7)',
+                            'rgba(52, 211, 153, 0.7)',
+                            'rgba(251, 146, 60, 0.7)'
                         ],
                         borderWidth: 0
                     }]
@@ -199,26 +194,25 @@
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: { color: '#9ca3af' }
+                            labels: { color: '#a8a8b3', padding: 16, font: { family: "'DM Sans'" } }
                         }
                     }
                 }
             });
 
-            // Favorite authors list
             const authorsList = document.getElementById('authorsList');
             if (stats.favorite_authors.length > 0) {
                 authorsList.innerHTML = stats.favorite_authors.map((author, idx) => `
-                    <div class="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
+                    <div class="flex justify-between items-center p-3 rounded-lg" style="background: var(--bg-surface); border-radius: var(--radius-md);">
                         <div class="flex items-center gap-3">
-                            <span class="text-2xl font-bold text-gray-600">#${idx + 1}</span>
+                            <span class="text-xl font-bold" style="color: var(--text-muted);">#${idx + 1}</span>
                             <p class="font-semibold">${author.author}</p>
                         </div>
-                        <span class="text-gray-400">${author.count} book${author.count > 1 ? 's' : ''}</span>
+                        <span style="color: var(--text-muted);">${author.count} book${author.count > 1 ? 's' : ''}</span>
                     </div>
                 `).join('');
             } else {
-                authorsList.innerHTML = '<p class="text-gray-400">No data yet</p>';
+                authorsList.innerHTML = '<p style="color: var(--text-muted);">No data yet</p>';
             }
 
         } catch (error) {

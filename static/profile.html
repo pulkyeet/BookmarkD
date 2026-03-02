@@ -7,44 +7,50 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-gray-900 text-gray-100">
+<body>
+
 <nav class="glass-nav fixed w-full z-50 top-0">
-    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-        <a href="feed.html" class="text-2xl font-bold gradient-text">BookmarkD</a>
-        <div class="flex items-center space-x-4">
-            <a href="books.html" class="hover:text-blue-400 transition">Browse</a>
-            <a href="feed.html" class="hover:text-blue-400 transition">Feed</a>
-            <a href="embed.html" class="hover:text-blue-400 transition">Embed</a>
-            <a href="profile.html" class="text-blue-400">Profile</a>
-            <button id="logoutBtn" class="btn-secondary">Logout</button>
+    <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+        <a href="index.html" class="flex items-center gap-2">
+            <span class="logo-text">BookmarkD</span>
+        </a>
+        <div class="flex items-center gap-6">
+            <a href="books.html" class="nav-link">Browse</a>
+            <a href="browse-lists.html" class="nav-link">Lists</a>
+            <a href="feed.html" class="nav-link">Feed</a>
+            <a href="my-lists.html" class="nav-link">My Lists</a>
+            <a href="stats.html" class="nav-link">Stats</a>
+            <a href="embed.html" class="nav-link">Embed</a>
+            <a href="profile.html" class="nav-link active">Profile</a>
+            <button id="logoutBtn" class="nav-btn-logout">Logout</button>
         </div>
     </div>
 </nav>
 
 <main class="pt-24 pb-12">
-    <div class="container mx-auto px-6">
-        <div class="mb-8">
-            <h1 class="text-4xl font-bold mb-2" id="username"></h1>
-            <p class="text-gray-400" id="email"></p>
+    <div class="max-w-4xl mx-auto px-6">
+        <div class="mb-8 animate-fade-in">
+            <h1 class="text-4xl font-bold mb-2" id="username" style="font-family: var(--font-display);"></h1>
+            <p id="email" style="color: var(--text-muted);"></p>
         </div>
 
         <div class="auth-card mb-8">
-            <h2 class="text-2xl font-bold mb-4">Your Stats</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <h2 class="text-xl font-bold mb-4" style="font-family: var(--font-display);">Your Stats</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div class="text-center">
                     <div id="totalRatings" class="text-3xl font-bold gradient-text">0</div>
-                    <div class="text-sm text-gray-400">Books Rated</div>
+                    <div class="text-sm" style="color: var(--text-muted);">Books Rated</div>
                 </div>
                 <div class="text-center">
                     <div id="avgRating" class="text-3xl font-bold gradient-text">0.0</div>
-                    <div class="text-sm text-gray-400">Avg Rating</div>
+                    <div class="text-sm" style="color: var(--text-muted);">Avg Rating</div>
                 </div>
             </div>
         </div>
 
         <!-- Status Tabs -->
         <div class="mb-6">
-            <div class="flex gap-2 border-b border-gray-700">
+            <div class="flex gap-1" style="border-bottom: 1px solid var(--border);">
                 <button class="tab-btn active" data-status="all">All Books</button>
                 <button class="tab-btn" data-status="to_read">To Read</button>
                 <button class="tab-btn" data-status="currently_reading">Reading</button>
@@ -52,7 +58,7 @@
             </div>
         </div>
 
-        <h2 class="text-2xl font-bold mb-6" id="sectionTitle">Your Books</h2>
+        <h2 class="text-2xl font-bold mb-6" id="sectionTitle" style="font-family: var(--font-display);">Your Books</h2>
 
         <div id="loading" class="text-center py-12">
             <div class="spinner"></div>
@@ -60,7 +66,7 @@
 
         <div id="ratingsList" class="space-y-4 hidden"></div>
 
-        <div id="noRatings" class="text-center py-12 text-gray-500 hidden">
+        <div id="noRatings" class="text-center py-12 hidden" style="color: var(--text-muted);">
             <p class="mb-4">You haven't rated any books yet.</p>
             <a href="books.html" class="btn-primary">Browse Books</a>
         </div>
@@ -68,26 +74,5 @@
 </main>
 
 <script type="module" src="js/profile.js"></script>
-
-<style>
-    .tab-btn {
-        padding: 12px 24px;
-        border-bottom: 2px solid transparent;
-        color: #9ca3af;
-        cursor: pointer;
-        transition: all 0.3s;
-        background: none;
-        border-top: none;
-        border-left: none;
-        border-right: none;
-    }
-    .tab-btn:hover {
-        color: #3b82f6;
-    }
-    .tab-btn.active {
-        border-bottom-color: #3b82f6;
-        color: #3b82f6;
-    }
-</style>
 </body>
 </html>

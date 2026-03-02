@@ -3,91 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BookmarkD - Discover & Rate Books</title>
-    <!-- SEO Meta Tags -->
-        <meta name="description" content="Track, rate, and share your reading journey. Join thousands of readers discovering their next favorite book on BookmarkD.">
-        <meta name="keywords" content="books, reading, book tracker, book reviews, goodreads alternative, letterboxd for books">
-        <meta name="author" content="BookmarkD">
-        
-        <!-- Open Graph -->
-        <meta property="og:type" content="website">
-        <meta property="og:url" content="https://bookmarkd.app">
-        <meta property="og:title" content="BookmarkD - Track Your Reading Journey">
-        <meta property="og:description" content="Rate books, write reviews, and discover your next read. Join the community of book lovers.">
-        <meta property="og:image" content="https://bookmarkd.app/og-image.jpg">
-        
-        <!-- Twitter Card -->
-        <meta name="twitter:card" content="summary_large_image">
-        <meta name="twitter:url" content="https://bookmarkd.app">
-        <meta name="twitter:title" content="BookmarkD - Track Your Reading Journey">
-        <meta name="twitter:description" content="Rate books, write reviews, and discover your next read.">
-        <meta name="twitter:image" content="https://bookmarkd.app/og-image.jpg">
+    <title>BookmarkD - Track Your Reading Journey</title>
+    <meta name="description" content="Track, rate, and share your reading journey. Join thousands of readers discovering their next favorite book on BookmarkD.">
+    <meta name="keywords" content="books, reading, book tracker, book reviews, goodreads alternative, letterboxd for books">
+    <meta name="author" content="BookmarkD">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://bookmarkd.app">
+    <meta property="og:title" content="BookmarkD - Track Your Reading Journey">
+    <meta property="og:description" content="Rate books, write reviews, and discover your next read. Join the community of book lovers.">
+    <meta property="og:image" content="https://bookmarkd.app/og-image.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://bookmarkd.app">
+    <meta name="twitter:title" content="BookmarkD - Track Your Reading Journey">
+    <meta name="twitter:description" content="Rate books, write reviews, and discover your next read.">
+    <meta name="twitter:image" content="https://bookmarkd.app/og-image.jpg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-gray-900 text-gray-100">
+<body>
+
 <nav class="glass-nav fixed w-full z-50 top-0">
-    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-        <a href="index.html" class="flex items-center gap-3">
-            <div class="logo-placeholder">
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                    <rect width="40" height="40" rx="8" fill="url(#gradient)"/>
-                    <path d="M12 10H20C24 10 26 12 26 16C26 20 24 22 20 22H12V10Z" fill="white" opacity="0.9"/>
-                    <path d="M12 22H21C25 22 27 24 27 28C27 32 25 34 21 34H12V22Z" fill="white" opacity="0.7"/>
-                    <defs>
-                        <linearGradient id="gradient" x1="0" y1="0" x2="40" y2="40">
-                            <stop stop-color="#3b82f6"/>
-                            <stop offset="1" stop-color="#8b5cf6"/>
-                        </linearGradient>
-                    </defs>
-                </svg>
-            </div>
-            <span class="text-2xl font-bold gradient-text">BookmarkD</span>
+    <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+        <a href="index.html" class="flex items-center gap-2">
+            <span class="logo-text">BookmarkD</span>
         </a>
-        <div class="space-x-4">
-            <a href="books.html" class="hover:text-blue-400 transition">Browse Books</a>
-            <a href="login.html" class="hover:text-blue-400 transition">Login</a>
-            <a href="signup.html" class="btn-primary">Sign Up</a>
+        <div class="flex items-center gap-6">
+            <a href="books.html" class="nav-link">Browse</a>
+            <a href="browse-lists.html" class="nav-link">Lists</a>
+            <a href="login.html" class="nav-link">Login</a>
+            <a href="signup.html" class="btn-primary" style="padding: 0.5rem 1.25rem; font-size: 0.8125rem;">Sign Up</a>
         </div>
     </div>
 </nav>
 
-<main class="pt-24 pb-12">
-    <div class="container mx-auto px-6 max-w-4xl">
-        <!-- CTA Banner -->
-        <div class="auth-card mb-8 text-center bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/50">
-            <h1 class="text-4xl font-bold mb-4 gradient-text">Welcome to BookmarkD</h1>
-            <p class="text-gray-300 mb-6">Join thousands of readers tracking and sharing their book journey</p>
-            <div class="space-x-4">
-                <a href="signup.html" class="btn-primary btn-large">Sign Up Free</a>
-                <a href="books.html" class="btn-secondary btn-large">Browse Books</a>
+<main class="pt-20">
+    <!-- Hero Section -->
+    <section class="hero-section min-h-[85vh] flex items-center relative">
+        <div class="max-w-6xl mx-auto px-6 w-full">
+            <div class="max-w-3xl mx-auto text-center stagger-in">
+                <p class="text-sm font-medium tracking-widest uppercase mb-6" style="color: var(--accent); letter-spacing: 0.15em;">
+                    Your personal reading companion
+                </p>
+                <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight" style="font-family: var(--font-display);">
+                    Every book<br>
+                    <span class="gradient-text" style="font-style: italic;">deserves a story</span>
+                </h1>
+                <p class="text-lg md:text-xl mb-10 max-w-xl mx-auto" style="color: var(--text-secondary); line-height: 1.7;">
+                    Track what you read. Rate what you love. Share with readers who get it. 
+                    The reading journal you've been looking for.
+                </p>
+                <div class="flex items-center justify-center gap-4 flex-wrap">
+                    <a href="signup.html" class="btn-primary btn-large">Start Tracking Free</a>
+                    <a href="books.html" class="btn-secondary btn-large">Browse Library</a>
+                </div>
             </div>
         </div>
+    </section>
 
-        <h2 class="text-2xl font-bold mb-6">Latest Activity</h2>
-
-        <div id="loading" class="text-center py-12">
-            <div class="spinner"></div>
+    <!-- Features -->
+    <section class="py-24 relative" style="border-top: 1px solid var(--border);">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4" style="font-family: var(--font-display);">Built for readers</h2>
+                <p style="color: var(--text-secondary);" class="text-lg max-w-lg mx-auto">Everything you need to curate your reading life, in one place.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 stagger-in">
+                <div class="feature-card">
+                    <div class="text-3xl mb-4">&#9733;</div>
+                    <h3 class="text-xl font-bold mb-2" style="font-family: var(--font-display);">Rate & Review</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9375rem;">Score books 1 to 10 and write reviews that help others discover great reads.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="text-3xl mb-4">&#128218;</div>
+                    <h3 class="text-xl font-bold mb-2" style="font-family: var(--font-display);">Custom Lists</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9375rem;">Organize your library into themed collections. Drag and drop to reorder.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="text-3xl mb-4">&#128101;</div>
+                    <h3 class="text-xl font-bold mb-2" style="font-family: var(--font-display);">Social Feed</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9375rem;">Follow friends, see what they're reading, and discover books through people you trust.</p>
+                </div>
+            </div>
         </div>
+    </section>
 
-        <div id="feedList" class="space-y-6 hidden"></div>
+    <!-- Latest Activity -->
+    <section class="py-20" style="border-top: 1px solid var(--border);">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="flex items-baseline justify-between mb-8">
+                <h2 class="text-2xl font-bold" style="font-family: var(--font-display);">Recent Activity</h2>
+                <a href="books.html" class="nav-link text-sm" style="color: var(--accent);">Browse all books &rarr;</a>
+            </div>
 
-        <div id="noActivity" class="text-center py-12 text-gray-500 hidden">
-            <p class="mb-4">No activity yet.</p>
-            <a href="signup.html" class="btn-primary">Be the first to rate!</a>
+            <div id="loading" class="text-center py-12">
+                <div class="spinner"></div>
+            </div>
+
+            <div id="feedList" class="space-y-4 hidden stagger-in"></div>
+
+            <div id="noActivity" class="text-center py-12 hidden" style="color: var(--text-muted);">
+                <p class="mb-4">No activity yet.</p>
+                <a href="signup.html" class="btn-primary">Be the first to rate!</a>
+            </div>
         </div>
+    </section>
 
-        <!-- Bottom CTA -->
-        <div class="text-center mt-12 p-8 bg-gray-800/50 rounded-lg">
-            <h3 class="text-2xl font-bold mb-2">Want to join the conversation?</h3>
-            <p class="text-gray-400 mb-4">Sign up to rate books, follow readers, and share your thoughts</p>
-            <a href="signup.html" class="btn-primary">Create Account</a>
+    <!-- Bottom CTA -->
+    <section class="py-24 relative" style="border-top: 1px solid var(--border);">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4" style="font-family: var(--font-display);">
+                Ready to start?
+            </h2>
+            <p class="mb-8 text-lg" style="color: var(--text-secondary);">
+                Join the community of readers who track every page.
+            </p>
+            <a href="signup.html" class="btn-primary btn-large">Create Free Account</a>
         </div>
-    </div>
+    </section>
 </main>
 
-<footer class="py-8 text-center text-gray-500 border-t border-gray-800">
-    <p>&copy; 2025 BookmarkD. Built with Go & Modern Web.</p>
+<footer class="py-8 text-center text-sm" style="color: var(--text-muted); border-top: 1px solid var(--border);">
+    <p>&copy; 2025 BookmarkD. Built with Go & passion for books.</p>
 </footer>
 
 <script type="module">
@@ -96,7 +132,6 @@
         window.location.href = 'feed.html';
     }
 
-    // Load public feed for logged-out users
     import { api } from './js/api.js';
 
     async function loadPublicFeed() {
@@ -105,33 +140,34 @@
         const noActivity = document.getElementById('noActivity');
 
         try {
-            const feed = await api.getFeed('all', 10, 0); // Show 10 items
+            const feed = await api.getFeed('all', 10, 0);
 
             loading.classList.add('hidden');
 
             if (feed && feed.length > 0) {
                 feedList.classList.remove('hidden');
                 feedList.innerHTML = feed.map(item => `
-                <div class="auth-card hover:border-blue-500 transition cursor-pointer"
+                <div class="auth-card hover:border-opacity-50 transition cursor-pointer"
+                     style="padding: 1.25rem;"
                      onclick="window.location.href='book-detail.html?id=${item.book_id}'">
                     <div class="flex gap-4">
                         <img src="${item.book_cover || 'https://via.placeholder.com/100x150'}"
                              alt="${item.book_title}"
-                             class="w-20 h-30 object-cover rounded">
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <p class="text-sm text-gray-400">
-                                        <span class="font-bold text-blue-400">${item.username}</span>
+                             class="w-16 h-24 object-cover rounded" style="border-radius: var(--radius-sm);">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start gap-3">
+                                <div class="min-w-0">
+                                    <p class="text-sm" style="color: var(--text-muted);">
+                                        <span class="font-semibold" style="color: var(--accent);">${item.username}</span>
                                         ${getStatusText(item.status)}
                                     </p>
-                                    <h3 class="font-bold text-lg mt-1">${item.book_title}</h3>
-                                    <p class="text-gray-400 text-sm">${item.book_author}</p>
+                                    <h3 class="font-bold mt-1 truncate">${item.book_title}</h3>
+                                    <p class="text-sm" style="color: var(--text-muted);">${item.book_author}</p>
                                 </div>
-                                ${item.rating > 0 ? `<div class="rating-badge">${item.rating}/10</div>` : ''}
+                                ${item.rating > 0 ? `<div class="rating-badge flex-shrink-0">${item.rating}/10</div>` : ''}
                             </div>
-                            ${item.review ? `<p class="text-gray-400 text-sm mt-2">${item.review}</p>` : ''}
-                            <p class="text-xs text-gray-500 mt-2">${formatDate(item.created_at)}</p>
+                            ${item.review ? `<p class="text-sm mt-2 line-clamp-2" style="color: var(--text-secondary);">${item.review}</p>` : ''}
+                            <p class="text-xs mt-2" style="color: var(--text-muted);">${formatDate(item.created_at)}</p>
                         </div>
                     </div>
                 </div>

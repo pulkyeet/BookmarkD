@@ -7,42 +7,33 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-gray-900 text-gray-100">
+<body>
+
 <nav class="glass-nav fixed w-full z-50 top-0">
-    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-        <a href="feed.html" class="flex items-center gap-3">
-            <div class="logo-placeholder">
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                    <rect width="40" height="40" rx="8" fill="url(#gradient)"/>
-                    <path d="M12 10H20C24 10 26 12 26 16C26 20 24 22 20 22H12V10Z" fill="white" opacity="0.9"/>
-                    <path d="M12 22H21C25 22 27 24 27 28C27 32 25 34 21 34H12V22Z" fill="white" opacity="0.7"/>
-                    <defs>
-                        <linearGradient id="gradient" x1="0" y1="0" x2="40" y2="40">
-                            <stop stop-color="#3b82f6"/>
-                            <stop offset="1" stop-color="#8b5cf6"/>
-                        </linearGradient>
-                    </defs>
-                </svg>
-            </div>
-            <span class="text-2xl font-bold gradient-text">BookmarkD</span>
+    <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+        <a href="index.html" class="flex items-center gap-2">
+            <span class="logo-text">BookmarkD</span>
         </a>
-        <div class="flex items-center space-x-4">
-            <a href="books.html" class="hover:text-blue-400 transition">Browse</a>
-            <a href="profile.html" id="profileLink" class="hidden hover:text-blue-400 transition">Profile</a>
-            <a href="login.html" id="loginLink" class="hover:text-blue-400 transition">Login</a>
-            <button id="logoutBtn" class="hidden btn-secondary">Logout</button>
+        <div class="flex items-center gap-6">
+            <a href="books.html" class="nav-link">Browse</a>
+            <a href="browse-lists.html" class="nav-link">Lists</a>
+            <a href="feed.html" class="nav-link active">Feed</a>
+            <a href="my-lists.html" id="myListsLink" class="nav-link hidden">My Lists</a>
+            <a href="profile.html" id="profileLink" class="nav-link hidden">Profile</a>
+            <a href="login.html" id="loginLink" class="nav-link">Login</a>
+            <button id="logoutBtn" class="hidden nav-btn-logout">Logout</button>
         </div>
     </div>
 </nav>
 
 <main class="pt-24 pb-12">
-    <div class="container mx-auto px-6 max-w-4xl">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-4xl font-bold">Activity Feed</h1>
+    <div class="max-w-4xl mx-auto px-6">
+        <div class="flex justify-between items-center mb-8 animate-fade-in">
+            <h1 class="text-4xl font-bold" style="font-family: var(--font-display);">Activity Feed</h1>
 
             <div id="feedToggle" class="hidden flex gap-2">
-                <button id="allFeedBtn" class="btn-secondary">Everyone</button>
-                <button id="followingFeedBtn" class="btn-primary">Following</button>
+                <button id="allFeedBtn" class="btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.8125rem;">Everyone</button>
+                <button id="followingFeedBtn" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8125rem;">Following</button>
             </div>
         </div>
 
@@ -50,14 +41,13 @@
             <div class="spinner"></div>
         </div>
 
-        <div id="feedList" class="space-y-6 hidden"></div>
+        <div id="feedList" class="space-y-4 hidden"></div>
 
-        <!-- ADD THESE 3 LINES -->
         <div id="loadMoreContainer" class="text-center mt-8 hidden">
             <button id="loadMoreBtn" class="btn-secondary">Load More</button>
         </div>
 
-        <div id="noActivity" class="text-center py-12 text-gray-500 hidden">
+        <div id="noActivity" class="text-center py-12 hidden" style="color: var(--text-muted);">
             <p class="mb-4">No activity yet.</p>
             <a href="books.html" class="btn-primary">Browse Books</a>
         </div>
@@ -66,34 +56,5 @@
 
 <script type="module" src="js/feed.js"></script>
 <div id="toast" class="toast"></div>
-
-<style>
-    .toast {
-        position: fixed;
-        bottom: 30px;
-        right: 30px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 16px 24px;
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-        opacity: 0;
-        transform: translateY(30px) scale(0.9);
-        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        z-index: 1000;
-        pointer-events: none;
-        font-weight: 600;
-        backdrop-filter: blur(10px);
-    }
-
-    .toast.show {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-
-    .toast.error {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    }
-</style>
 </body>
 </html>
